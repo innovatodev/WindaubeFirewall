@@ -63,6 +63,12 @@ public class ConnectionModel
             additionalInfo.Add($"CN:{Country}");
         }
 
+        // Add ProfileName info if present
+        if (!string.IsNullOrEmpty(ProfileName))
+        {
+            additionalInfo.Add($"ProName:{ProfileName}");
+        }
+
         return additionalInfo.Count > 0
             ? $"{baseInfo}|{string.Join("|", additionalInfo)}"
             : baseInfo;

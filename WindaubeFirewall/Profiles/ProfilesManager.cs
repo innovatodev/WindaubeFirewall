@@ -173,17 +173,27 @@ public class ProfilesManager
 
     private static bool MatchesFingerprint(FingerPrint fingerprint, ConnectionModel connection)
     {
-        return fingerprint.Type switch
+        // Always expand env vars when matching regardless of setting
+        var patternValue = fingerprint.Type switch
         {
-            FingerprintType.ProcessName => MatchValue(fingerprint.Operator, connection.ProcessName, fingerprint.Value),
-            FingerprintType.FullPath => MatchValue(fingerprint.Operator, connection.ProcessPath, fingerprint.Value),
-            FingerprintType.CommandLine => MatchValue(fingerprint.Operator, connection.ProcessCommandLine, fingerprint.Value),
-            FingerprintType.WindowsService => MatchValue(fingerprint.Operator,
-                connection.ProcessName.StartsWith("SVC:") ? connection.ProcessName[4..] : "", fingerprint.Value),
-            FingerprintType.WindowsStore => MatchValue(fingerprint.Operator,
-                connection.ProcessName.StartsWith("WinStore:") ? connection.ProcessName[9..] : "", fingerprint.Value),
-            _ => false
+            FingerprintType.FullPath or FingerprintType.CommandLine =>
+                Environment.ExpandEnvironmentVariables(fingerprint.Value),
+            _ => fingerprint.Value
         };
+
+        var valueToMatch = fingerprint.Type switch
+        {
+            FingerprintType.ProcessName => connection.ProcessName,
+            FingerprintType.FullPath => connection.ProcessPath,
+            FingerprintType.CommandLine => connection.ProcessCommandLine,
+            FingerprintType.WindowsService => connection.ProcessName.StartsWith("SVC:") ?
+                connection.ProcessName[4..] : "",
+            FingerprintType.WindowsStore => connection.ProcessName.StartsWith("WinStore:") ?
+                connection.ProcessName[9..] : "",
+            _ => ""
+        };
+
+        return MatchValue(fingerprint.Operator, valueToMatch, patternValue);
     }
 
     private static bool MatchValue(MatchOperator op, string value, string pattern)
@@ -195,6 +205,37 @@ public class ProfilesManager
             MatchOperator.Contains => value.Contains(pattern, StringComparison.OrdinalIgnoreCase),
             _ => false
         };
+    }
+
+    private static string ConvertToEnvVarPath(string path)
+    {
+        if (!App.SettingsApp.Application.ProfileGenerateWithEnvVars)
+            return path;
+
+        // Order by length descending to replace longest paths first
+        var envVars = new Dictionary<string, string>
+        {
+            { Environment.GetFolderPath(Environment.SpecialFolder.Windows), "%SystemRoot%" },
+            { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "%ProgramFiles%" },
+            { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "%ProgramFiles(x86)%" },
+            { Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "%USERPROFILE%" },
+            { Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "%ProgramData%" }
+        }.OrderByDescending(x => x.Key.Length);
+
+        var result = path;
+        foreach (var envVar in envVars)
+        {
+            if (result.StartsWith(envVar.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                result = result.Replace(envVar.Key, envVar.Value, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        return result;
+    }
+
+    private static string ExpandEnvVarPath(string path)
+    {
+        return Environment.ExpandEnvironmentVariables(path);
     }
 
     public static SettingsProfiles CreateDefaultProfile(ConnectionModel connection)
@@ -242,7 +283,7 @@ public class ProfilesManager
             {
                 Type = FingerprintType.FullPath,
                 Operator = MatchOperator.Equals,
-                Value = connection.ProcessPath
+                Value = ConvertToEnvVarPath(connection.ProcessPath)  // Convert to env vars if enabled
             };
         }
 
@@ -364,7 +405,7 @@ public class ProfilesManager
             {
                 Type = FingerprintType.FullPath,
                 Operator = MatchOperator.Equals,
-                Value = processPath
+                Value = ConvertToEnvVarPath(processPath)  // Convert to env vars if enabled
             };
         }
 

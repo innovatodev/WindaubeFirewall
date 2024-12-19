@@ -156,6 +156,7 @@ public class ConnectionStoreWindow : Window, IDisposable
         grid.Columns.Add(new DataGridTextColumn { Header = "VR", Width = DataGridLength.Auto, Binding = new Binding("VerdictReason") });
         grid.Columns.Add(new DataGridTextColumn { Header = "PID", Width = DataGridLength.Auto, Binding = new Binding("ProcessID") });
         grid.Columns.Add(new DataGridTextColumn { Header = "PName", Width = DataGridLength.Auto, Binding = new Binding("ProcessName") });
+        grid.Columns.Add(new DataGridTextColumn { Header = "ProName", Width = DataGridLength.Auto, Binding = new Binding("ProfileName") });
     }
 
     private void AddNetworkColumns(DataGrid grid)

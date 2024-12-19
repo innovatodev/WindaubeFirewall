@@ -48,9 +48,23 @@ public class FingerPrint : IEquatable<FingerPrint>
     {
         if (other is null) return false;
 
+        var thisValue = Type switch
+        {
+            FingerprintType.FullPath or FingerprintType.CommandLine =>
+                Environment.ExpandEnvironmentVariables(Value),
+            _ => Value
+        };
+
+        var otherValue = other.Type switch
+        {
+            FingerprintType.FullPath or FingerprintType.CommandLine =>
+                Environment.ExpandEnvironmentVariables(other.Value),
+            _ => other.Value
+        };
+
         return Type == other.Type &&
                Operator == other.Operator &&
-               Value.Equals(other.Value, StringComparison.OrdinalIgnoreCase);
+               thisValue.Equals(otherValue, StringComparison.OrdinalIgnoreCase);
     }
 
     public override bool Equals(object? obj) => Equals(obj as FingerPrint);
