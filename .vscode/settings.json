@@ -1,0 +1,111 @@
+{
+  "[jsonc]": {
+    "editor.indentSize": 2
+  },
+  "[powershell]": {
+    "files.encoding": "utf8bom"
+  },
+  "[xaml]": {
+    "editor.tabSize": 2
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml",
+    "editor.indentSize": 2
+  },
+  "csharp.debug.console": "integratedTerminal",
+  "csharp.debug.symbolOptions.searchMicrosoftSymbolServer": true,
+  "csharp.debug.symbolOptions.searchNuGetOrgSymbolServer": true,
+  "csharp.inlayHints.enableInlayHintsForImplicitObjectCreation": false,
+  "csharp.inlayHints.enableInlayHintsForImplicitVariableTypes": false,
+  "csharp.inlayHints.enableInlayHintsForLambdaParameterTypes": false,
+  "csharp.inlayHints.enableInlayHintsForTypes": false,
+  "csharp.preview.improvedLaunchExperience": true,
+  "debug.onTaskErrors": "abort",
+  "debug.terminal.clearBeforeReusing": true,
+  "dotnet.automaticallySyncWithActiveItem": false,
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "fullSolution",
+  "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "fullSolution",
+  "dotnet.inlayHints.enableInlayHintsForIndexerParameters": false,
+  "dotnet.inlayHints.enableInlayHintsForLiteralParameters": false,
+  "dotnet.inlayHints.enableInlayHintsForObjectCreationParameters": false,
+  "dotnet.inlayHints.enableInlayHintsForOtherParameters": false,
+  "dotnet.inlayHints.enableInlayHintsForParameters": false,
+  "dotnet.server.useOmnisharp": false,
+  "dotnetAcquisitionExtension.enableTelemetry": false,
+  "editor.accessibilitySupport": "off",
+  "editor.detectIndentation": false,
+  "editor.formatOnSave": true,
+  "editor.renderWhitespace": "trailing",
+  "editor.tabCompletion": "on",
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmPasteNative": false,
+  "extensions.ignoreRecommendations": true,
+  "files.autoGuessEncoding": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 10000,
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "git.autofetch": "all",
+  "git.enableSmartCommit": true,
+  "github.copilot.advanced": {
+    "useLanguageServer": true
+  },
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".copilot-instructions.txt"
+    }
+  ],
+  "github.copilot.chat.generateTests.codeLens": true,
+  "github.copilot.chat.inlineChatCompletionTrigger.enabled": true,
+  "github.copilot.chat.inlineChatHint.enabled": true,
+  "github.copilot.chat.reviewSelection.instructions": [],
+  "github.copilot.chat.search.semanticTextResults": true,
+  "github.copilot.chat.temporalContext.enabled": true,
+  "github.copilot.enable": {
+    "*": true,
+    "markdown": true,
+    "plaintext": true,
+    "scminput": false
+  },
+  "gitlens.showWhatsNewAfterUpgrades": false,
+  "markdown.extension.tableFormatter.normalizeIndentation": true,
+  "markdown.extension.toc.orderedList": true,
+  "markdown.updateLinksOnFileMove.enabled": "always",
+  "markdown.validate.enabled": true,
+  "markdownlint.config": {
+    "MD004": false,
+    "MD013": false,
+    "MD024": false,
+    "MD033": false,
+    "MD034": false,
+    "MD038": false,
+    "MD041": false,
+    "MD042": false
+  },
+  "powershell.codeFormatting.autoCorrectAliases": true,
+  "powershell.codeFormatting.avoidSemicolonsAsLineTerminators": true,
+  "powershell.codeFormatting.preset": "OTBS",
+  "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+  "powershell.codeFormatting.useCorrectCasing": true,
+  "powershell.codeFormatting.whitespaceBetweenParameters": true,
+  "powershell.integratedConsole.startInBackground": true,
+  "powershell.integratedConsole.suppressStartupBanner": true,
+  "powershell.pester.codeLens": false,
+  "powershell.pester.outputVerbosity": "Normal",
+  "powershell.pester.useLegacyCodeLens": false,
+  "powershell.powerShellDefaultVersion": "Powershell (Store)",
+  "remove-empty-lines.allowedNumberOfEmptyLines": 1,
+  "remove-empty-lines.onSaveReason": {
+    "afterDelay": true
+  },
+  "remove-empty-lines.runOnSave": true,
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.suggest.enabled": true,
+  "workbench.editor.pinnedTabsOnSeparateRow": true,
+  "workbench.editor.wrapTabs": true,
+  "workbench.startupEditor": "none",
+  "git.openRepositoryInParentFolders": "always"
+}
