@@ -1,4 +1,5 @@
 using System.ComponentModel;
+
 using WindaubeFirewall.Blocklists;
 using WindaubeFirewall.Profiles;
 
@@ -26,6 +27,7 @@ public class ApplicationSettings
 {
     public ulong ConnectionEndedTimeout { get; set; } = 600; // [1, 1440]
     public bool ConnectionStoreUseDB { get; set; } = false;
+    public bool ProfileGenerateWithEnvVars { get; set; } = true;
 }
 
 public class DnsServerSettings

@@ -16,7 +16,7 @@ The term "windaube" is a play on words used in French to mock or criticize Micro
 
 - **Windows**, the operating system by Microsoft.
 - **Daube**, a French slang term meaning "junk" or "something of poor quality."
-- Together, **Windaube** humorously translates to something like "Window-junk" or "Windows-trash." It’s often used by tech enthusiasts, Linux users, or others who might be frustrated with Windows due to perceived flaws, bugs, or limitations.
+- Together, **Windaube** humorously translates to something like "Window-junk" or "Windows-trash." It's often used by tech enthusiasts, Linux users, or others who might be frustrated with Windows due to perceived flaws, bugs, or limitations.
 
 It's informal and used in a **joking** or **sarcastic** tone rather than as a serious critique.
 

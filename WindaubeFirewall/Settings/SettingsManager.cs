@@ -12,6 +12,7 @@ public class SettingsManager
     private static readonly ISerializer Serializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+        .DisableAliases()
         .Build();
 
     private static readonly IDeserializer Deserializer = new DeserializerBuilder()
