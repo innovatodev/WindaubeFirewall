@@ -1,4 +1,5 @@
 using System.IO;
+
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -8,6 +9,9 @@ public class SettingsManager
 {
     private static readonly string AppSettingsPath = Constants.AppSettingsFile;
     private static readonly string ProfilesSettingsPath = Constants.AppProfilesFile;
+    private static readonly object _settingsLock = new();
+    private const int MaxRetries = 3;
+    private const int RetryDelayMs = 100;
 
     private static readonly ISerializer Serializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
@@ -52,40 +56,76 @@ public class SettingsManager
 
     public static void SaveSettingsApplication(SettingsApplication settings)
     {
-        try
+        lock (_settingsLock)
         {
-            var yaml = Serializer.Serialize(settings);
-            File.WriteAllText(AppSettingsPath, yaml);
-        }
-        catch (Exception ex)
-        {
-            Logger.Log($"Error saving application settings: {ex}");
-            throw;
+            RetryFileOperation(() =>
+            {
+                var yaml = Serializer.Serialize(settings);
+                File.WriteAllText(AppSettingsPath, yaml);
+            });
         }
     }
 
     public static List<SettingsProfiles> LoadSettingsProfiles()
     {
-        List<SettingsProfiles> loadedProfiles;
-
-        if (!File.Exists(ProfilesSettingsPath))
+        lock (_settingsLock)
         {
-            loadedProfiles = new List<SettingsProfiles>();
-            SaveSettingsProfiles(loadedProfiles);
-        }
-        else
-        {
-            var yaml = File.ReadAllText(ProfilesSettingsPath);
-            loadedProfiles = Deserializer.Deserialize<List<SettingsProfiles>>(yaml) ?? new List<SettingsProfiles>();
-            SaveSettingsProfiles(loadedProfiles);
-        }
+            List<SettingsProfiles> loadedProfiles;
 
-        return loadedProfiles;
+            if (!File.Exists(ProfilesSettingsPath))
+            {
+                loadedProfiles = new List<SettingsProfiles>();
+                SaveSettingsProfiles(loadedProfiles);
+            }
+            else
+            {
+                var yaml = File.ReadAllText(ProfilesSettingsPath);
+                loadedProfiles = Deserializer.Deserialize<List<SettingsProfiles>>(yaml) ?? new List<SettingsProfiles>();
+            }
+
+            return loadedProfiles;
+        }
     }
 
     public static void SaveSettingsProfiles(List<SettingsProfiles> profiles)
     {
-        var yaml = Serializer.Serialize(profiles);
-        File.WriteAllText(ProfilesSettingsPath, yaml);
+        lock (_settingsLock)
+        {
+            RetryFileOperation(() =>
+            {
+                using var fileStream = new FileStream(
+                    ProfilesSettingsPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.Read);
+                using var writer = new StreamWriter(fileStream);
+                var yaml = Serializer.Serialize(profiles);
+                writer.Write(yaml);
+            });
+        }
+    }
+
+    private static void RetryFileOperation(Action operation)
+    {
+        Exception? lastException = null;
+
+        for (int i = 0; i < MaxRetries; i++)
+        {
+            try
+            {
+                operation();
+                return;
+            }
+            catch (IOException ex)
+            {
+                lastException = ex;
+                if (i < MaxRetries - 1)
+                {
+                    Thread.Sleep(RetryDelayMs);
+                }
+            }
+        }
+
+        throw new IOException($"Failed to access file after {MaxRetries} attempts", lastException);
     }
 }
