@@ -53,20 +53,20 @@ No installer is available yet. Refer to the "How to use" section for development
 ## Demo
 
 Default behavior (allowing everything but incoming connections):
-![Demo1](.\Media\demo1.jpg)
-![Demo2](.\Media\demo2.jpg)
+![Demo1](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo1.jpg)
+![Demo2](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo2.jpg)
 
 Memory usage with ~1M blocklists ips/domains entries:
-![Demo3](.\Media\demo3.jpg)
+![Demo3](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo3.jpg)
 
 Bandwidth usage tracking with an active twitch stream:
-![Demo4](.\Media\demo4.jpg)
+![Demo4](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo4.jpg)
 
 DNS interception:
-![Demo5](.\Media\demo5.jpg)
+![Demo5](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo5.jpg)
 
 DNS not intercepted:
-![Demo6](.\Media\demo6.jpg)
+![Demo6](https://github.com/innovatodev/WindaubeFirewall/blob/main/Media/demo6.jpg)
 
 ## How to use (for development or test)
 
