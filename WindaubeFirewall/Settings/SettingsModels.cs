@@ -121,6 +121,11 @@ public class BlocklistsSettingsApplication
     {
         return OnlineBlocklists.Where(bl => bl.IsEnabled).ToList();
     }
+
+    public List<OfflineBlocklist> GetEnabledOfflineBlocklists()
+    {
+        return OfflineBlocklists.Where(bl => bl.IsEnabled).ToList();
+    }
 }
 
 // Profile-level Settings
@@ -143,7 +148,10 @@ public class SettingsProfiles : SettingsBase
 public class BlocklistsSettings
 {
     [YamlMember(DefaultValuesHandling = DefaultValuesHandling.Preserve)]
-    public List<OfflineBlocklistEnabledState> OfflineBlocklists { get; set; } = new();
+    public List<OfflineBlocklistEnabledState> OfflineBlocklists { get; set; } = new List<OfflineBlocklistEnabledState>
+    {
+
+    };
 
     [YamlMember(DefaultValuesHandling = DefaultValuesHandling.Preserve)]
     public List<BlocklistEnabledState> OnlineBlocklists { get; set; } = new List<BlocklistEnabledState>

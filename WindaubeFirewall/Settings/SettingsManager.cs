@@ -1,4 +1,5 @@
 using System.IO;
+
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -34,7 +35,7 @@ public class SettingsManager
     private static readonly ISerializer _profileSerializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve) // Already preserving nulls
-        // Disable YAML anchors
+                                                                        // Disable YAML anchors
         .DisableAliases()
         .Build();
 
@@ -83,7 +84,16 @@ public class SettingsManager
     {
         lock (_settingsLock)
         {
-            return LoadYamlFile<List<SettingsProfiles>>(ProfilesSettingsPath);
+            var loadedProfiles = LoadYamlFile<List<SettingsProfiles>>(ProfilesSettingsPath);
+            // Avoid adding duplicate profiles
+            //foreach (var profile in loadedProfiles)
+            //{
+            //    if (!SettingsProfiles.Any(p => p.Id == profile.Id))
+            //    {
+            //        SettingsProfiles.Add(profile);
+            //    }
+            //}
+            return loadedProfiles;
         }
     }
 

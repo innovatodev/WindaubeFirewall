@@ -453,7 +453,7 @@ public class ConnectionWorker
             Organization = localIPData?.Organization ?? string.Empty,
         };
 
-        // Match connection to a profile or generate one
+        // Match connection to an existing profile
         var matchedProfile = ProfilesManager.MatchConnection(connection);
         if (matchedProfile == null)
         {
