@@ -512,4 +512,10 @@ public class ProfilesManager
         // Implement matching logic based on process properties
         return profile.Name.Equals(processName, StringComparison.OrdinalIgnoreCase);
     }
+
+    public static string? GetProfileIcon(Guid profileId)
+    {
+        var profile = App.SettingsProfiles.FirstOrDefault(p => p.Id == profileId);
+        return profile?.Icon;
+    }
 }

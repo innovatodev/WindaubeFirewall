@@ -8,6 +8,10 @@ using TabControl = System.Windows.Controls.TabControl;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Net;
+using System.Windows.Media.Imaging;
+using System.IO;
+using WindaubeFirewall.Profiles;
+using WindaubeFirewall.ProcessInfos;
 
 namespace WindaubeFirewall.Connection;
 
@@ -22,6 +26,9 @@ public class ConnectionStoreWindow : Window, IDisposable
     private readonly HashSet<string> _activeDnsConnectionIds = [];
     private readonly HashSet<string> _endedDnsConnectionIds = [];
     private int _activeTabIndex = 0;
+
+    // Add a static instance of ProfileIconConverter
+    private static readonly ProfileIconConverter _profileIconConverter = new ProfileIconConverter();
 
     public static void Initialize()
     {
@@ -110,6 +117,27 @@ public class ConnectionStoreWindow : Window, IDisposable
     {
         var grid = CreateBaseGrid(itemsSource);
 
+        // Add ICO column
+        var icoColumn = new DataGridTemplateColumn
+        {
+            Header = "ICO",
+            Width = DataGridLength.Auto
+        };
+
+        var imageFactory = new FrameworkElementFactory(typeof(Image));
+        // Ensure you're using the converter instance, not the Convert method
+        imageFactory.SetBinding(Image.SourceProperty, new Binding("ProfileID") { Converter = _profileIconConverter });
+        imageFactory.SetValue(Image.WidthProperty, 16.0);
+        imageFactory.SetValue(Image.HeightProperty, 16.0);
+
+        var dataTemplate = new DataTemplate
+        {
+            VisualTree = imageFactory
+        };
+
+        icoColumn.CellTemplate = dataTemplate;
+        grid.Columns.Add(icoColumn);
+
         AddDurationColumn(grid, isEnded);
         AddBasicColumns(grid);
         AddNetworkColumns(grid);
@@ -123,6 +151,26 @@ public class ConnectionStoreWindow : Window, IDisposable
     private DataGrid CreateDnsGrid(ICollectionView itemsSource, bool isEnded = false)
     {
         var grid = CreateBaseGrid(itemsSource);
+
+        // Add ICO column
+        var icoColumn = new DataGridTemplateColumn
+        {
+            Header = "ICO",
+            Width = DataGridLength.Auto
+        };
+
+        var imageFactory = new FrameworkElementFactory(typeof(Image));
+        imageFactory.SetBinding(Image.SourceProperty, new Binding("ProfileID") { Converter = _profileIconConverter }); // Use the static converter instance
+        imageFactory.SetValue(Image.WidthProperty, 16.0);
+        imageFactory.SetValue(Image.HeightProperty, 16.0);
+
+        var dataTemplate = new DataTemplate
+        {
+            VisualTree = imageFactory
+        };
+
+        icoColumn.CellTemplate = dataTemplate;
+        grid.Columns.Add(icoColumn);
 
         AddDurationColumn(grid, isEnded);
         AddBasicDnsColumns(grid);
@@ -156,7 +204,7 @@ public class ConnectionStoreWindow : Window, IDisposable
         grid.Columns.Add(new DataGridTextColumn { Header = "VR", Width = DataGridLength.Auto, Binding = new Binding("VerdictReason") });
         grid.Columns.Add(new DataGridTextColumn { Header = "PID", Width = DataGridLength.Auto, Binding = new Binding("ProcessID") });
         grid.Columns.Add(new DataGridTextColumn { Header = "PName", Width = DataGridLength.Auto, Binding = new Binding("ProcessName") });
-        grid.Columns.Add(new DataGridTextColumn { Header = "ProName", Width = DataGridLength.Auto, Binding = new Binding("ProfileName") });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Profile", Width = DataGridLength.Auto, Binding = new Binding("ProfileName") });
     }
 
     private void AddNetworkColumns(DataGrid grid)
@@ -440,6 +488,50 @@ public class TimeOnlyConverter : IValueConverter
         if (value is DateTime dateTime)
             return dateTime.ToString("HH:mm:ss.fff");
         return "";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+public class ProfileIconConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        try
+        {
+            if (value is Guid profileId)
+            {
+                var base64 = ProfilesManager.GetProfileIcon(profileId) ?? ProcessInfo.ICON_DEFAULT_PROCESS;
+                byte[] bytes = System.Convert.FromBase64String(base64);
+                using var ms = new MemoryStream(bytes);
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.StreamSource = ms;
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.EndInit();
+                image.Freeze(); // Optimize performance by freezing the image
+                return image;
+            }
+            return CreateImageFromBase64(ProcessInfo.ICON_DEFAULT_PROCESS);
+        }
+        catch
+        {
+            return CreateImageFromBase64(ProcessInfo.ICON_DEFAULT_PROCESS);
+        }
+    }
+
+    private static BitmapImage CreateImageFromBase64(string base64)
+    {
+        byte[] bytes = System.Convert.FromBase64String(base64);
+        using var ms = new MemoryStream(bytes);
+        var image = new BitmapImage();
+        image.BeginInit();
+        image.StreamSource = ms;
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.EndInit();
+        image.Freeze(); // Optimize performance by freezing the image
+        return image;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
