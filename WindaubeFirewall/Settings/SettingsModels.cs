@@ -7,7 +7,9 @@ using System.IO;
 
 namespace WindaubeFirewall.Settings;
 
-// Base class for settings with property change notification
+/// <summary>
+/// Base class for settings that implements property change notifications
+/// </summary>
 public class SettingsBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -16,7 +18,9 @@ public class SettingsBase : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
 
-// Application-level Settings
+/// <summary>
+/// Top-level application settings containing all configuration categories
+/// </summary>
 public class SettingsApplication : SettingsBase
 {
     public ApplicationSettings Application { get; set; } = new();
@@ -35,13 +39,30 @@ public class SettingsApplication : SettingsBase
     public BlocklistsSettingsApplication Blocklists { get; set; } = new();
 }
 
+/// <summary>
+/// Core application configuration settings
+/// </summary>
 public class ApplicationSettings
 {
+    /// <summary>
+    /// Duration in seconds to keep ended connections in history
+    /// </summary>
     public ulong ConnectionEndedTimeout { get; set; } = 600; // [1, 1440]
+
+    /// <summary>
+    /// Whether to use a database for connection storage
+    /// </summary>
     public bool ConnectionStoreUseDB { get; set; } = false;
+
+    /// <summary>
+    /// Whether to auto-generate profiles with environment variables in paths
+    /// </summary>
     public bool ProfileGenerateWithEnvVars { get; set; } = true;
 }
 
+/// <summary>
+/// DNS server related configuration settings
+/// </summary>
 public class DnsServerSettings
 {
     public bool IsEnabled { get; set; } = false; // [True, False]
@@ -69,6 +90,9 @@ public class DnsServerSettings
     ];
 }
 
+/// <summary>
+/// Network action and rules configuration settings
+/// </summary>
 public class NetworkActionSettings
 {
     [YamlMember(DefaultValuesHandling = DefaultValuesHandling.Preserve)]
@@ -128,7 +152,9 @@ public class BlocklistsSettingsApplication
     }
 }
 
-// Profile-level Settings
+/// <summary>
+/// Profile-specific settings for a firewall profile
+/// </summary>
 public class SettingsProfiles : SettingsBase
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -145,6 +171,9 @@ public class SettingsProfiles : SettingsBase
     public BlocklistsSettings? Blocklists { get; set; } = null;
 }
 
+/// <summary>
+/// Blocklist settings specific to a profile
+/// </summary>
 public class BlocklistsSettings
 {
     [YamlMember(DefaultValuesHandling = DefaultValuesHandling.Preserve)]

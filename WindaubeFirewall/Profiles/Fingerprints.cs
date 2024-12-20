@@ -4,10 +4,24 @@ using WindaubeFirewall.Connection;
 
 namespace WindaubeFirewall.Profiles;
 
+/// <summary>
+/// Represents a pattern for matching process properties to identify applications
+/// </summary>
 public class FingerPrint : IEquatable<FingerPrint>
 {
+    /// <summary>
+    /// The type of process property to match against
+    /// </summary>
     public FingerprintType Type { get; set; }
+
+    /// <summary>
+    /// The comparison operator to use for matching
+    /// </summary>
     public MatchOperator Operator { get; set; }
+
+    /// <summary>
+    /// The value to match against
+    /// </summary>
     public string Value { get; set; } = string.Empty;
 
     public bool Matches(ConnectionModel connection)
@@ -72,6 +86,9 @@ public class FingerPrint : IEquatable<FingerPrint>
     public override int GetHashCode() => HashCode.Combine(Type, Operator, Value.ToLowerInvariant());
 }
 
+/// <summary>
+/// Types of process properties that can be matched
+/// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum FingerprintType
 {
@@ -82,6 +99,9 @@ public enum FingerprintType
     WindowsService
 }
 
+/// <summary>
+/// Comparison operators available for fingerprint matching
+/// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum MatchOperator
 {

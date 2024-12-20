@@ -2,8 +2,15 @@ using System.Net;
 
 namespace WindaubeFirewall.DnsServer;
 
+/// <summary>
+/// Represents a DNS resolver with its configuration and current state.
+/// Supports multiple resolver protocols (DNS, DOH, DOT) and handles resolver health tracking.
+/// </summary>
 public class Resolver : IEquatable<Resolver>
 {
+    /// <summary>
+    /// Gets or sets the protocol used by this resolver (DNS, DOH, DOT)
+    /// </summary>
     required public ResolverProtocolOptions Protocol { get; set; }
     required public IPAddress IPAddress { get; set; }
     required public ushort Port { get; set; }
@@ -49,6 +56,11 @@ public class Resolver : IEquatable<Resolver>
         };
     }
 
+    /// <summary>
+    /// Parses a list of resolver strings into Resolver objects.
+    /// </summary>
+    /// <param name="resolverStrings">List of resolver configuration strings</param>
+    /// <returns>List of configured resolvers</returns>
     public static List<Resolver> ParseResolvers(List<string> resolverStrings)
     {
         var resolvers = new List<Resolver>();
@@ -165,11 +177,18 @@ public class Resolver : IEquatable<Resolver>
     }
 }
 
+/// <summary>
+/// Defines detection methods for blocked DNS responses from upstream resolvers.
+/// </summary>
 public enum ResolverBlockedIfOptions
 {
+    /// <summary>When resolver returns REFUSED response code</summary>
     Refused,
+    /// <summary>When resolver returns 0.0.0.0 or :: addresses</summary>
     ZeroIP,
+    /// <summary>When resolver returns empty response</summary>
     Empty,
+    /// <summary>Never detect blocked responses</summary>
     Disabled
 }
 

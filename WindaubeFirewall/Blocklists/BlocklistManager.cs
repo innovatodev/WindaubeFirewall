@@ -5,6 +5,11 @@ using WindaubeFirewall.Settings;
 
 namespace WindaubeFirewall.Blocklists;
 
+/// <summary>
+/// Manages the loading, updating, and processing of DNS and IP blocklists.
+/// Handles both online and offline blocklists, including automatic updates
+/// and file parsing for different blocklist formats.
+/// </summary>
 public class BlocklistManager
 {
     public static List<string> LoadDnsBlocklistsDomains()
@@ -157,6 +162,11 @@ public class BlocklistManager
         return blocklists;
     }
 
+    /// <summary>
+    /// Parses a line from an IP blocklist, handling comments and whitespace.
+    /// </summary>
+    /// <param name="line">The line to parse</param>
+    /// <returns>The parsed IP address or null if line is invalid</returns>
     private static string? ParseIpLine(string line)
     {
         // Split on comment markers and take the first part
@@ -169,6 +179,14 @@ public class BlocklistManager
         return ipPart;
     }
 
+    /// <summary>
+    /// Loads and initializes a blocklist from a file, creating the appropriate
+    /// filtering data structures and validating the content.
+    /// </summary>
+    /// <param name="name">Name of the blocklist</param>
+    /// <param name="filePath">Path to the blocklist file</param>
+    /// <param name="type">Type of blocklist entries</param>
+    /// <returns>An initialized Blocklist object or null if loading fails</returns>
     public static Blocklist? LoadBlocklist(string name, string filePath, BlockListType type)
     {
         try

@@ -4,6 +4,9 @@ using WindaubeFirewall.Connection;
 
 namespace WindaubeFirewall.Profiles;
 
+/// <summary>
+/// Types of targets that a firewall rule can match against
+/// </summary>
 public enum TargetType
 {
     Any,
@@ -15,6 +18,9 @@ public enum TargetType
     Scope
 }
 
+/// <summary>
+/// Maps common service names to their standard port numbers
+/// </summary>
 public static class CommonPorts
 {
     public static readonly Dictionary<string, int> PortMap = new(StringComparer.OrdinalIgnoreCase)
@@ -37,6 +43,9 @@ public static class CommonPorts
     };
 }
 
+/// <summary>
+/// Represents a firewall rule with match conditions and actions
+/// </summary>
 public class RuleSet
 {
     public string Target { get; set; } = "*";
@@ -51,6 +60,11 @@ public class RuleSet
     public int? PortEnd { get; set; }
     public byte Action { get; set; }  // 0 = block, 1 = allow, 2 = prompt
 
+    /// <summary>
+    /// Parses a rule string into a RuleSet object
+    /// </summary>
+    /// <param name="rule">The rule string to parse in format "ACTION TARGET [PROTOCOL[/PORT]]"</param>
+    /// <returns>A new RuleSet object representing the parsed rule</returns>
     public static RuleSet Parse(string rule)
     {
         var parts = rule.Split(' ', 2);
@@ -158,6 +172,11 @@ public class RuleSet
         return int.Parse(port);
     }
 
+    /// <summary>
+    /// Checks if a connection matches this rule's conditions
+    /// </summary>
+    /// <param name="connection">The connection to check</param>
+    /// <returns>True if all conditions match, false otherwise</returns>
     public bool Matches(ConnectionModel connection)
     {
         // Protocol check

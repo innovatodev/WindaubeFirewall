@@ -2,6 +2,9 @@ using System.IO;
 
 namespace WindaubeFirewall.Blocklists;
 
+/// <summary>
+/// Represents a locally stored blocklist file.
+/// </summary>
 public class OfflineBlocklist
 {
     required public string Name { get; set; }
@@ -11,6 +14,9 @@ public class OfflineBlocklist
 
 }
 
+/// <summary>
+/// Represents a blocklist that is downloaded from a remote URL.
+/// </summary>
 public class OnlineBlocklist
 {
     required public string Name { get; set; }
@@ -22,12 +28,20 @@ public class OnlineBlocklist
     public bool IsEnabled { get; set; } = false;
 }
 
+/// <summary>
+/// Defines the type of content stored in a blocklist.
+/// </summary>
 public enum BlocklistContentType
 {
+    /// <summary>Domain names to be blocked</summary>
     Domain,
+    /// <summary>IP addresses to be blocked</summary>
     IP
 }
 
+/// <summary>
+/// Represents a loaded and active blocklist with its filtering data structure.
+/// </summary>
 public class Blocklist
 {
     required public string Name { get; set; }
@@ -37,10 +51,17 @@ public class Blocklist
     public bool IsEnabled { get; set; }
 }
 
+/// <summary>
+/// Defines the format of entries in a blocklist file.
+/// </summary>
 public enum BlockListType
 {
-    Wildcard,    // Matches patterns like *.123-proxy.net
-    Domain,      // Matches patterns like 123-proxy.net
-    Hosts,       // Matches patterns like 0.0.0.0 cdn.0ms.dev
-    IP          // Matches patterns like 1.0.0.3
+    /// <summary>Matches wildcard patterns like *.example.com</summary>
+    Wildcard,
+    /// <summary>Matches exact domain names like example.com</summary>
+    Domain,
+    /// <summary>Matches hosts file format like 0.0.0.0 example.com</summary>
+    Hosts,
+    /// <summary>Matches IP addresses like 1.2.3.4</summary>
+    IP
 }

@@ -2,6 +2,9 @@ using System.Net;
 
 namespace WindaubeFirewall.Network;
 
+/// <summary>
+/// Provides services for managing and querying network connection tables
+/// </summary>
 public class NetworkTableService
 {
     /// <summary>

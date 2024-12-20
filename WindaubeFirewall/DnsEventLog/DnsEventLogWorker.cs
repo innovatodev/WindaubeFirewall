@@ -9,6 +9,11 @@ using WindaubeFirewall.Settings;
 
 namespace WindaubeFirewall.DnsEventLog;
 
+/// <summary>
+/// Manages DNS event logging by listening to Windows DNS client events, processing queries and responses,
+/// and maintaining a cache of recent DNS activities. Provides functionality to track DNS resolutions
+/// per process and map them to profiles.
+/// </summary>
 public class DnsEventLogWorker
 {
     public static bool IsCancellationRequested => App._cancellationTokenSource.IsCancellationRequested;
@@ -30,6 +35,11 @@ public class DnsEventLogWorker
     // Index for faster IP lookups
     private static readonly ConcurrentDictionary<IPAddress, List<string>> _ipToResponseUids = new();
 
+    /// <summary>
+    /// Main worker method that processes DNS events from the ETW session.
+    /// Handles both query (3006) and response (3008) events, associating them with processes
+    /// and security profiles.
+    /// </summary>
     public static void DoWork()
     {
         if (_dnsSession?.Source == null) return;
@@ -127,6 +137,11 @@ public class DnsEventLogWorker
 
     }
 
+    /// <summary>
+    /// Parses DNS query results to extract IP addresses and CNAME records.
+    /// Updates the IP address index for reverse lookups.
+    /// </summary>
+    /// <param name="response">The DNS response event to parse</param>
     private static void ParseQueryResults(DnsResponseEventLog response)
     {
         if (string.IsNullOrEmpty(response.QueryResults))
@@ -163,6 +178,10 @@ public class DnsEventLogWorker
         }
     }
 
+    /// <summary>
+    /// Removes DNS records older than KEEP_TIME seconds to prevent memory leaks.
+    /// Cleans up both queries and responses, including the IP address index.
+    /// </summary>
     private static void CleanupOldRecords()
     {
         var cutoffTime = DateTime.Now.AddSeconds(-KEEP_TIME);
@@ -213,6 +232,10 @@ public class DnsEventLogWorker
         }
     }
 
+    /// <summary>
+    /// Initializes the DNS event logging system by creating an ETW session
+    /// and starting the worker and cleanup threads.
+    /// </summary>
     public static void Start()
     {
         try
@@ -250,6 +273,10 @@ public class DnsEventLogWorker
         });
     }
 
+    /// <summary>
+    /// Gracefully stops the DNS event logging system, cleaning up resources
+    /// and disposing of the ETW session.
+    /// </summary>
     public static void Stop()
     {
         _workerThread?.Join(1000);

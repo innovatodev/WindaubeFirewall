@@ -13,6 +13,10 @@ using NetworkActionSettings = WindaubeFirewall.Settings.NetworkActionSettings;
 
 namespace WindaubeFirewall.Connection;
 
+/// <summary>
+/// Manages network connection events, processing verdicts and tracking connection states.
+/// Handles connection lifecycle from initialization to termination, including bandwidth monitoring.
+/// </summary>
 public class ConnectionWorker
 {
     public static bool IsCancellationRequested => App._cancellationTokenSource.IsCancellationRequested;
@@ -94,6 +98,9 @@ public class ConnectionWorker
         return state?.IsEnabled ?? defaultValue;
     }
 
+    /// <summary>
+    /// Processes a new connection event and determines its verdict based on rules and profiles.
+    /// </summary>
     private static void ProcessVerdict(ConnectionModel connection)
     {
         // Load profile and app settings
@@ -181,10 +188,11 @@ public class ConnectionWorker
             }
         }
 
-        // Check all force block conditions (highest priority)
+        // Check all force block conditions in order of priority
         var forceBlockIncoming = GetEffectiveSetting(profile.NetworkAction?.ForceBlockIncoming, globalNetworkAction.ForceBlockIncoming);
         if (forceBlockIncoming && connection.Direction == 1)
         {
+            // Block incoming connections if force block incoming is enabled
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "ForceBlockIncoming";
             connection.Verdict = (byte)DriverInfoSender.Commands.Verdict.PermanentBlock;
@@ -556,10 +564,14 @@ public class ConnectionWorker
         }
     }
 
+    /// <summary>
+    /// Checks if a connection is still active by querying the network tables.
+    /// </summary>
     private static bool IsConnectionActive(ConnectionModel connection)
     {
         if (connection.Protocol == 6) // TCP
         {
+            // For TCP, check both local->remote and remote->local endpoints
             var pidLocalRemote = NetworkTableService.FindActiveProcessByEndpoint(
                 connection.LocalIP,
                 connection.LocalPort,
@@ -576,6 +588,7 @@ public class ConnectionWorker
         }
         else // UDP
         {
+            // For UDP, check if either endpoint is still active
             var pidLocal = NetworkTableService.FindActiveProcessByEndpoint(
                 connection.LocalIP,
                 connection.LocalPort,

@@ -6,14 +6,23 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace WindaubeFirewall.Settings;
 
+/// <summary>
+/// Manages loading and saving of application settings and profiles using YAML serialization
+/// </summary>
 public class SettingsManager
 {
+    // File paths for settings
     private static readonly string AppSettingsPath = Constants.AppSettingsFile;
     private static readonly string ProfilesSettingsPath = Constants.AppProfilesFile;
+
+    // Thread safety lock
     private static readonly object _settingsLock = new();
+
+    // Retry configuration
     private const int MaxRetries = 3;
     private const int RetryDelayMs = 100;
 
+    // YAML serialization configuration
     private static readonly ISerializer _serializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)

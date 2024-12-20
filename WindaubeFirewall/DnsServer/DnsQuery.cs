@@ -1,29 +1,50 @@
 using System.Net;
-using System.Net.Sockets;
 
 namespace WindaubeFirewall.DnsServer;
 
+/// <summary>
+/// Represents a DNS query with parsed header fields and query parameters.
+/// Provides methods for query validation and inspection.
+/// </summary>
 public class DnsQuery
 {
-    // Informations
+    /// <summary>Raw DNS query packet data</summary>
     public byte[] RawQuery { get; }
+
+    /// <summary>Source IP address of the query</summary>
     public IPAddress IpAddress { get; }
+
+    /// <summary>Source port of the query</summary>
     public int Port { get; }
+
+    /// <summary>Timestamp when query was received</summary>
     public DateTime Timestamp { get; }
 
-    // Parsed DNS fields
+    // DNS header fields
+    /// <summary>DNS transaction ID for query/response matching</summary>
     public ushort TransactionId { get; set; }
+
+    /// <summary>Whether this is a query (true) or response (false)</summary>
     public bool IsQuery { get; set; }
+
+    /// <summary>DNS header flags</summary>
     public ushort Flags { get; set; }
+
+    // DNS section counts
     public ushort QuestionCount { get; set; }
     public ushort AnswerCount { get; set; }
     public ushort AuthorityCount { get; set; }
     public ushort AdditionalCount { get; set; }
+
+    // Query details
     public string? QueryDomain { get; set; }
     public DnsQueryType QueryType { get; set; }
     public DnsQueryClass QueryClass { get; set; }
     public bool Recurse { get; set; }
 
+    /// <summary>
+    /// Creates a new DNS query from a raw packet and remote endpoint.
+    /// </summary>
     public DnsQuery(byte[] rawQuery, IPEndPoint remoteEndPoint)
     {
         RawQuery = rawQuery;
@@ -34,6 +55,9 @@ public class DnsQuery
         Recurse = false;
     }
 
+    /// <summary>
+    /// Creates a new DNS query with specified parameters.
+    /// </summary>
     public DnsQuery(DnsQueryType queryType, string domain, IPAddress ipAddress, int port)
     {
         QueryType = queryType;
@@ -55,16 +79,21 @@ public class DnsQuery
                $"{QueryType} {QueryClass}";
     }
 
+    /// <summary>
+    /// Validates a DNS query for correctness and security.
+    /// Checks header fields, question count, and query content.
+    /// </summary>
+    /// <returns>True if query is valid, false otherwise</returns>
     public static bool IsValidQuery(DnsQuery query)
     {
-        // Validate query header and content
+        // DNS header must be at least 12 bytes
         if (query.RawQuery.Length < 12)
         {
             Logger.Log($"DnsServerValidation: Query too short ({query.RawQuery.Length} bytes)");
             return false;
         }
 
-        // Must be a standard query (QR=0, OPCODE=0)
+        // Check QR bit (must be 0 for query) and OPCODE (must be 0 for standard query)
         var opcode = (query.Flags >> 11) & 0xF;
         if (!query.IsQuery || opcode != 0)
         {
@@ -72,13 +101,13 @@ public class DnsQuery
             return false;
         }
 
-        // Must have exactly one question
+        // DNS protocol requires exactly one question in standard queries
         if (query.QuestionCount != 1)
         {
-            // Reduced logging for excessive question counts
+            // Log differently for possible DoS attempts (high question count)
             if (query.QuestionCount > 10)
             {
-                Logger.Log($"DnsServerValidation: Excessive question count: {query.QuestionCount}");
+                Logger.Log($"DnsServerValidation: Possible DoS - excessive question count: {query.QuestionCount}");
             }
             else
             {
@@ -112,18 +141,52 @@ public class DnsQuery
         return true;
     }
 
+    /// <summary>
+    /// Parses the DNS header fields and query section from the raw query data.
+    /// </summary>
+    /// <remarks>
+    /// DNS header format (RFC 1035 section 4.1.1):
+    ///                                 1  1  1  1  1  1
+    ///   0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |                      ID                       |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |                    QDCOUNT                    |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |                    ANCOUNT                    |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |                    NSCOUNT                    |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// |                    ARCOUNT                    |
+    /// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    /// </remarks>
     private void ParseDnsHeader()
     {
-        if (RawQuery.Length < 12) return; // DNS header is 12 bytes
+        // DNS header structure (12 bytes total):
+        // Bytes 0-1:   Transaction ID
+        // Bytes 2-3:   Flags
+        // Bytes 4-5:   Question count
+        // Bytes 6-7:   Answer RR count
+        // Bytes 8-9:   Authority RR count
+        // Bytes 10-11: Additional RR count
 
-        TransactionId = (ushort)((RawQuery[0] << 8) | RawQuery[1]);
-        Flags = (ushort)((RawQuery[2] << 8) | RawQuery[3]);
-        IsQuery = (Flags & 0x8000) == 0;
-        QuestionCount = (ushort)((RawQuery[4] << 8) | RawQuery[5]);
-        AnswerCount = (ushort)((RawQuery[6] << 8) | RawQuery[7]);
-        AuthorityCount = (ushort)((RawQuery[8] << 8) | RawQuery[9]);
-        AdditionalCount = (ushort)((RawQuery[10] << 8) | RawQuery[11]);
+        if (RawQuery.Length < 12) return;
+
+        // Parse each header field
+        // Parse header fields (12 bytes total)
+        TransactionId = (ushort)((RawQuery[0] << 8) | RawQuery[1]);      // Bytes 0-1: Transaction ID
+        Flags = (ushort)((RawQuery[2] << 8) | RawQuery[3]);             // Bytes 2-3: Flags
+        IsQuery = (Flags & 0x8000) == 0;                                // QR bit (bit 15)
+        QuestionCount = (ushort)((RawQuery[4] << 8) | RawQuery[5]);     // Bytes 4-5: Questions
+        AnswerCount = (ushort)((RawQuery[6] << 8) | RawQuery[7]);       // Bytes 6-7: Answer RRs
+        AuthorityCount = (ushort)((RawQuery[8] << 8) | RawQuery[9]);    // Bytes 8-9: Authority RRs
+        AdditionalCount = (ushort)((RawQuery[10] << 8) | RawQuery[11]); // Bytes 10-11: Additional RRs
+
+        // Parse query section
         QueryDomain = DnsUtils.ExtractDomain(RawQuery);
+
         // Parse Query Type and Class if we have enough data
         if (RawQuery.Length >= 16)
         {
@@ -133,6 +196,9 @@ public class DnsQuery
     }
 }
 
+/// <summary>
+/// DNS query types as defined in RFC 1035 and subsequent RFCs.
+/// </summary>
 public enum DnsQueryType : ushort
 {
     A = 1,
@@ -151,6 +217,10 @@ public enum DnsQueryType : ushort
     CAA = 257,
 }
 
+/// <summary>
+/// DNS query classes as defined in RFC 1035.
+/// IN is the most common class used for Internet data.
+/// </summary>
 public enum DnsQueryClass : ushort
 {
     IN = 1,

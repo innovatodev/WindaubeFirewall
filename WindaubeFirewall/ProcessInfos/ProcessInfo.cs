@@ -7,15 +7,24 @@ using System.Collections.Concurrent;
 
 namespace WindaubeFirewall.ProcessInfos;
 
+/// <summary>
+/// Provides functionality for retrieving and caching process information on Windows systems.
+/// Supports multiple methods of process information retrieval including P/Invoke, WMI, and handles
+/// special cases like Windows Services and Store Apps.
+/// </summary>
 public partial class ProcessInfo
 {
+    // Cache for storing process information to reduce repeated lookups
     public static readonly ConcurrentDictionary<int, (string ProcessName, string ProcessPath, string ProcessCommandLine)> _cache = new();
     private static readonly ConcurrentQueue<int> _cacheQueue = new();
     private const int CacheSize = 1024;
+
+    // Base64 encoded icon strings for various process types
     public const string ICON_DEFAULT_PROCESS = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJGSURBVFhH7ZfbThNRGIV71fPBtryCXhpfS9Sqbe0BFKsIKh5auCDhyqTPIUilIOVUW4paQUx8jN4s8/8zezrsn53OhaYksJMvnczF+tbac1Wf7+pc+lMuZqvlYh7jIVv1yZf/nmazee4vwQUGg8FYuHgF6vU6lpeXGXpW7299+IOJpd+YWDpFevEU6dovpGsnSFeJY6TeHyP17idSb4k+km/6uLlyMjJXFDCRXiThUMpCR9p3pMmF70i+HqLn6HgvcO7KH0guELbw1TdcI14eMYn5nsjREQVMV6WWWisN0vkjJOYOLV4Q3ZG5ooCJ4dUqoZL2XMJDJGa7SMx2EH/eQfzZV5Gj47nAcGXPYq7nEnZZmGBpB/FKG7GnxIHI0REFTFelX23ctZJxpG3EZg4Qe7LPjMoVBUy4lwopCWf2mejjPZtdRKd3RY6O5wKOsNJG3JGqpXssU0SmdhAp7yBSaokcHVHAdFXupVES0kolZWHLotRCpLiNcOELowt1RAETtFRda3RKrbSFLLWE4cIWwo+2EM5vMnqOjucCtPLMUlqppCS0CeWaCGWJDUbP0REFTJ8gUrKEzlIlzW8ilCNs6cMNBB98trjfEEIdUcCEkobsq3WELFVCSxrMrCNwj/gkcnS8FyCxLQ3SSkfaQCCzjmCmwULm7hoCd9YQmFwVOTqigOkT8NVqUhazUElX4Z8kPsJ/20IX6ogCJm5Utq2VmbMr/SwdCt1cn26KHB3PBf4XF6NAqZCr0cM4KBXyNf1vwtW5fOcvKPlRePbRP+UAAAAASUVORK5CYII=";
     public const string ICON_WINDAUBEFIREWALL = "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";
     public const string ICON_UNKNOWN = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAfFJREFUWEfFlztOw0AQhn9HS4QgIK6CRE8KNzQ+AQU34CocAa4QUVCkSJWCiqMgBEKKogStsVezk92Z9UDA5cr2P49vHlsBqABs8f1U0+n0eLFYfPzVmRfvn6qu69P5fP5Gxfd91hvwL+I+4t4Aq/g9gMvxeLxcrVbXlqg1TTPxOZ/wnKfC7pzbrNdrkjHAOYfM2ajUoDYCystbQUgy6BFAozGkQWgVbw3rDBejIUH4G+KhwnKs5SDUxFOGPwO4IJ5H6anr+oyXeA5CSVyFS4F1x/AdCIUfqOIEuE3vPgN4J+IRhIL4EYDPvl1rZHfvJSPJU8FD8koTR6x/B3DCQApepvJbGkkakpx4sIkIpUJc6swDgBvvDIcwlzda07nGk6oK6X+jPo0UwnYkG7perpdk/0dTRiHUaj943xl5DuAlA6bmTKioYP3AYdMuL0bx6NtBEJL0DM05T22r+xMIUy1cCzsFOAnhoW82Bgg5G9rOEMT9GlDaCbXBcuecuy1ZWKydkHuZmgtqI0vtB9ZcWiGMDLeMY2nB0CC8AvDESze3E2rhjECSpp9SujGEbMxqHmm009rPrn7ixcTQHTmsfo8/kPaI0ouJJRrqBjXoYtKlR2MDqeVE2qBKLibWq1s7dLT1LeqEPiSz2cyvX+G6vu+zL7EDTSSNIbkhAAAAAElFTkSuQmCC";
 
+    // Array of process access rights to try when querying process information
     private static readonly uint[] _accessRights = [
         0x001F0FFF,             // PROCESS_ALL_ACCESS
         0x0410,                  // PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
@@ -23,6 +32,9 @@ public partial class ProcessInfo
         0x1000                 // PROCESS_QUERY_LIMITED_INFORMATION
     ];
 
+    /// <summary>
+    /// Adds process information to the cache and manages cache size
+    /// </summary>
     private static void AddToCache(int pid, string processName, string? processPath = null, string? processCommandLine = null)
     {
         _cache.TryAdd(pid, (processName, processPath ?? "", processCommandLine ?? ""));
@@ -45,6 +57,11 @@ public partial class ProcessInfo
         }
     }
 
+    /// <summary>
+    /// Extracts and converts a process's icon to base64 string representation
+    /// </summary>
+    /// <param name="filePath">Path to the executable file</param>
+    /// <returns>Base64 encoded string of the icon</returns>
     public static string GetProcessIconBase64(string filePath)
     {
         try
@@ -68,6 +85,11 @@ public partial class ProcessInfo
         }
     }
 
+    /// <summary>
+    /// Retrieves comprehensive process information including name, path, and command line
+    /// </summary>
+    /// <param name="pid">Process ID</param>
+    /// <returns>Tuple containing process name, path, and command line</returns>
     public static (string name, string path, string commandline) GetProcessInfo(int pid)
     {
         if (pid == 0 || pid == 4) return ("SYSTEM", "SYSTEM", "SYSTEM");
@@ -662,6 +684,9 @@ public partial class ProcessInfo
     internal static partial bool CloseHandle(IntPtr hObject);
 
     // Structures
+    /// <summary>
+    /// Represents basic process information structure used in NT API calls
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct PROCESS_BASIC_INFORMATION
     {
@@ -670,6 +695,9 @@ public partial class ProcessInfo
 
     }
 
+    /// <summary>
+    /// Represents a Unicode string structure used in Windows API calls
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct UNICODE_STRING
     {

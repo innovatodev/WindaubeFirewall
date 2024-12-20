@@ -7,8 +7,20 @@ using System.Security.Authentication;
 
 namespace WindaubeFirewall.DnsServer;
 
+/// <summary>
+/// Provides DNS client implementations for different DNS protocols (UDP, DoH, DoT).
+/// Handles network communication with DNS resolvers and response processing.
+/// </summary>
 public static class DnsClients
 {
+    /// <summary>
+    /// Queries a DNS resolver using standard UDP protocol.
+    /// </summary>
+    /// <param name="query">DNS query to send</param>
+    /// <param name="resolver">Target DNS resolver</param>
+    /// <param name="timeout">Query timeout in milliseconds</param>
+    /// <param name="token">Cancellation token</param>
+    /// <returns>DNS response if successful, null otherwise</returns>
     public static async Task<DnsResponse?> QueryAsyncDNS(DnsQuery query, Resolver resolver, int timeout, CancellationToken token)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -57,6 +69,14 @@ public static class DnsClients
         return null;
     }
 
+    /// <summary>
+    /// Queries a DNS resolver using DNS-over-HTTPS protocol.
+    /// </summary>
+    /// <param name="query">DNS query to send</param>
+    /// <param name="resolver">Target DNS resolver</param>
+    /// <param name="timeout">Query timeout in milliseconds</param>
+    /// <param name="token">Cancellation token</param>
+    /// <returns>DNS response if successful, null otherwise</returns>
     public static async Task<DnsResponse?> QueryAsyncDOH(DnsQuery query, Resolver resolver, int timeout, CancellationToken token)
     {
         try
@@ -113,6 +133,14 @@ public static class DnsClients
         return null;
     }
 
+    /// <summary>
+    /// Queries a DNS resolver using DNS-over-TLS protocol.
+    /// </summary>
+    /// <param name="query">DNS query to send</param>
+    /// <param name="resolver">Target DNS resolver</param>
+    /// <param name="timeout">Query timeout in milliseconds</param>
+    /// <param name="token">Cancellation token</param>
+    /// <returns>DNS response if successful, null otherwise</returns>
     public static async Task<DnsResponse?> QueryAsyncDOT(DnsQuery query, Resolver resolver, int timeout, CancellationToken token)
     {
         TcpClient? tcpClient = null;
@@ -185,6 +213,14 @@ public static class DnsClients
         return null;
     }
 
+    /// <summary>
+    /// Performs a reverse DNS lookup using PTR records.
+    /// </summary>
+    /// <param name="query">DNS query for PTR lookup</param>
+    /// <param name="resolver">Target DNS resolver</param>
+    /// <param name="timeout">Query timeout in milliseconds</param>
+    /// <param name="token">Cancellation token</param>
+    /// <returns>DNS lookup result if successful, null otherwise</returns>
     public static async Task<DnsLookup?> QueryAsyncLookup(DnsQuery query, Resolver resolver, int timeout, CancellationToken token)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token);

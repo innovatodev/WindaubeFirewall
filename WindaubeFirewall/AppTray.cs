@@ -3,8 +3,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+
 using WindaubeFirewall.Connection;
 using WindaubeFirewall.Driver;
+using WindaubeFirewall.Settings;
 
 namespace WindaubeFirewall;
 
@@ -84,11 +86,13 @@ public class AppTray : IDisposable
         {
             DnsServer.DnsServerWorker.Disable();
             App.SettingsApp.DnsServer.IsEnabled = false;
+            SettingsManager.SaveSettingsApplication(App.SettingsApp);
         }
         else
         {
             DnsServer.DnsServerWorker.Enable();
             App.SettingsApp.DnsServer.IsEnabled = true;
+            SettingsManager.SaveSettingsApplication(App.SettingsApp);
         }
         UpdateDnsServerToggleState();
     }

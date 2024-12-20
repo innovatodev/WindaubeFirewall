@@ -6,6 +6,10 @@ using WindaubeFirewall.Blocklists;
 
 namespace WindaubeFirewall.DnsServer;
 
+/// <summary>
+/// Core DNS server implementation that handles DNS query processing, caching, and response management.
+/// Supports concurrent query processing and integrates with the system's blocklist functionality.
+/// </summary>
 public class DnsServerWorker
 {
     public static bool IsCancellationRequested => App._cancellationTokenSource.IsCancellationRequested;
@@ -32,6 +36,10 @@ public class DnsServerWorker
     private static readonly ConcurrentQueue<DnsQuery> _pendingQueries = new();
     private static readonly List<Task> _activeQueries = [];
 
+    /// <summary>
+    /// Main processing loop for DNS queries. Handles incoming queries, checks cache,
+    /// applies blocklists, and manages query responses.
+    /// </summary>
     public static void DoWork()
     {
         while (!IsCancellationRequested)
@@ -157,6 +165,13 @@ public class DnsServerWorker
         }
     }
 
+    /// <summary>
+    /// Attempts to restart the DNS server after a failure.
+    /// </summary>
+    /// <remarks>
+    /// Handles cleanup and recreation of UDP socket with proper IPv6/IPv4 dual-stack setup.
+    /// Implements exponential backoff through Thread.Sleep on repeated failures.
+    /// </remarks>
     private static void TryRestart()
     {
         try
@@ -186,6 +201,17 @@ public class DnsServerWorker
         }
     }
 
+    /// <summary>
+    /// Removes special suffixes from domain names for processing.
+    /// </summary>
+    /// <param name="domain">Domain name to clean</param>
+    /// <returns>Cleaned domain name without special suffixes</returns>
+    /// <remarks>
+    /// Handles:
+    /// - .mshome.net (Microsoft home network)
+    /// - .in-addr.arpa (IPv4 reverse DNS)
+    /// - .ip6.arpa (IPv6 reverse DNS)
+    /// </remarks>
     private static string? CleanDomainName(string? domain)
     {
         if (domain == null) return null;
@@ -205,6 +231,11 @@ public class DnsServerWorker
         return domain;
     }
 
+    /// <summary>
+    /// Processes a DNS query by checking blocklists, cache, and forwarding to upstream resolvers.
+    /// </summary>
+    /// <param name="query">The DNS query to process</param>
+    /// <param name="token">Cancellation token for the operation</param>
     private static async Task ProcessQueryAsync(DnsQuery query, CancellationToken token)
     {
         try
@@ -409,6 +440,17 @@ public class DnsServerWorker
         }
     }
 
+    /// <summary>
+    /// Handles resolver failures and implements circuit breaker pattern.
+    /// </summary>
+    /// <param name="resolver">The failing resolver</param>
+    /// <param name="query">Query that triggered the failure</param>
+    /// <param name="attempt">Current retry attempt number</param>
+    /// <param name="ex">Exception that caused the failure</param>
+    /// <remarks>
+    /// Tracks failures per resolver and marks resolvers as failing when they exceed
+    /// the maximum retry count. Uses separate locks for thread safety.
+    /// </remarks>
     private static void HandleResolverFailure(Resolver resolver, DnsQuery query, int attempt, Exception ex)
     {
         lock (_lock)
@@ -513,6 +555,9 @@ public class DnsServerWorker
         }
     }
 
+    /// <summary>
+    /// Enables and starts the DNS server worker, initializing required components and beginning query processing.
+    /// </summary>
     public static void Enable()
     {
         lock (_lock)
@@ -551,6 +596,9 @@ public class DnsServerWorker
         }
     }
 
+    /// <summary>
+    /// Disables and stops the DNS server worker, cleaning up resources and stopping query processing.
+    /// </summary>
     public static void Disable()
     {
         lock (_lock)

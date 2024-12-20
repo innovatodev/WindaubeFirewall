@@ -4,8 +4,14 @@ using WindaubeFirewall.Connection;
 
 namespace WindaubeFirewall.Profiles;
 
+/// <summary>
+/// Manages firewall profiles and their creation, matching and persistence
+/// </summary>
 public class ProfilesManager
 {
+    /// <summary>
+    /// Ensures that required special system profiles exist in the profiles list
+    /// </summary>
     public static void EnsureSpecialProfiles(List<SettingsProfiles> profiles)
     {
         // Define default special profiles
@@ -155,6 +161,11 @@ public class ProfilesManager
         }
     }
 
+    /// <summary>
+    /// Creates a new default profile for a connection
+    /// </summary>
+    /// <param name="connection">The connection to create a profile for</param>
+    /// <returns>A new SettingsProfiles object with default settings</returns>
     public static SettingsProfiles CreateDefaultProfile(ConnectionModel connection)
     {
         var icon = ProcessInfo.GetProcessIconBase64(connection.ProcessPath);
@@ -350,6 +361,11 @@ public class ProfilesManager
         }
     }
 
+    /// <summary>
+    /// Matches a connection to an existing profile based on fingerprints
+    /// </summary>
+    /// <param name="connection">The connection to find a profile for</param>
+    /// <returns>The matching profile or null if no match found</returns>
     public static SettingsProfiles? MatchConnection(ConnectionModel connection)
     {
         var profiles = App.SettingsProfiles;

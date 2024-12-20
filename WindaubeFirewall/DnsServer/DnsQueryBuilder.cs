@@ -1,12 +1,19 @@
-using System.Net;
-using System.Net.Sockets;
-
 namespace WindaubeFirewall.DnsServer;
 
+/// <summary>
+/// Utility class for constructing DNS queries and responses in raw packet format.
+/// Supports creation of UDP, DoH, and DoT query packets as well as response packets.
+/// </summary>
 public static class DnsQueryBuilder
 {
     private static int _queryId = 1;
 
+    /// <summary>
+    /// Creates a DNS query packet for UDP transport.
+    /// </summary>
+    /// <param name="domain">The domain name to query</param>
+    /// <param name="queryType">Type of DNS query (A, AAAA, etc)</param>
+    /// <returns>Raw DNS query packet as byte array</returns>
     public static byte[] CreateUDP(string domain, DnsQueryType queryType = DnsQueryType.A)
     {
         var query = new List<byte>();
@@ -34,16 +41,34 @@ public static class DnsQueryBuilder
         return [.. query];
     }
 
+    /// <summary>
+    /// Creates a DNS query packet for DNS-over-HTTPS transport.
+    /// </summary>
+    /// <param name="domain">The domain name to query</param>
+    /// <param name="dnsDomain">The DoH server's domain name</param>
+    /// <param name="queryType">Type of DNS query</param>
+    /// <returns>Raw DNS query packet as byte array</returns>
     public static byte[] CreateDOH(string domain, string dnsDomain, DnsQueryType queryType = DnsQueryType.A)
     {
         return CreateUDP(domain, queryType);
     }
 
+    /// <summary>
+    /// Creates a DNS query packet for DNS-over-TLS transport.
+    /// </summary>
+    /// <param name="domain">The domain name to query</param>
+    /// <param name="queryType">Type of DNS query</param>
+    /// <returns>Raw DNS query packet as byte array</returns>
     public static byte[] CreateDOT(string domain, DnsQueryType queryType = DnsQueryType.A)
     {
         return CreateUDP(domain, queryType);
     }
 
+    /// <summary>
+    /// Creates a new DNS query packet based on an existing query, preserving transaction ID and structure.
+    /// </summary>
+    /// <param name="originalQuery">Original DNS query packet</param>
+    /// <returns>New DNS query packet as byte array</returns>
     public static byte[] CreateFromExisting(byte[] originalQuery)
     {
         // Ensure this method correctly preserves the original transaction ID and query structure.
@@ -66,6 +91,12 @@ public static class DnsQueryBuilder
         return [.. query];
     }
 
+    /// <summary>
+    /// Creates a DNS response packet based on an original query and resolved information.
+    /// </summary>
+    /// <param name="originalQuery">Original DNS query packet</param>
+    /// <param name="dnsResponse">Resolved DNS response information</param>
+    /// <returns>DNS response packet as byte array</returns>
     public static byte[] CreateResponse(byte[] originalQuery, DnsResponse dnsResponse)
     {
         var responsePacket = new List<byte>();
@@ -135,6 +166,12 @@ public static class DnsQueryBuilder
         return [.. responsePacket];
     }
 
+    /// <summary>
+    /// Creates a DNS PTR response packet for reverse DNS lookups.
+    /// </summary>
+    /// <param name="originalQuery">Original DNS query packet</param>
+    /// <param name="dnsLookup">Resolved PTR lookup information</param>
+    /// <returns>DNS PTR response packet as byte array</returns>
     public static byte[] CreatePTRResponse(byte[] originalQuery, DnsLookup dnsLookup)
     {
         var responsePacket = new List<byte>();

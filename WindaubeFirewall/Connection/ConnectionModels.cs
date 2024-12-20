@@ -2,6 +2,9 @@ using System.Net;
 
 namespace WindaubeFirewall.Connection;
 
+/// <summary>
+/// Represents a network connection with its associated metadata, verdict and profile information.
+/// </summary>
 public class ConnectionModel
 {
     required public Guid ProfileID { get; set; }
@@ -74,6 +77,9 @@ public class ConnectionModel
             : baseInfo;
     }
 
+    /// <summary>
+    /// Generates a unique connection identifier based on protocol, direction and endpoint information.
+    /// </summary>
     public static string GenerateConnectionID(byte protocol, byte direction, IPAddress localIP, ushort localPort, IPAddress remoteIP, ushort remotePort)
     {
         string input = $"{protocol}-{direction}_{localIP}:{localPort}-{remoteIP}:{remotePort}";
@@ -81,6 +87,10 @@ public class ConnectionModel
     }
 }
 
+/// <summary>
+/// Represents a new connection event from the network driver.
+/// Contains initial connection information needed for verdict processing.
+/// </summary>
 public class ConnectionEvent
 {
     required public ulong ID;
@@ -113,6 +123,9 @@ public class ConnectionEvent
     }
 }
 
+/// <summary>
+/// Represents a connection termination event from the network driver.
+/// </summary>
 public class ConnectionEndEvent
 {
     required public int ProcessID;
