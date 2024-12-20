@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net.Sockets;
+
 using WindaubeFirewall.Blocklists;
 using WindaubeFirewall.Driver;
 using WindaubeFirewall.IPInfos;
@@ -7,6 +8,8 @@ using WindaubeFirewall.Network;
 using WindaubeFirewall.ProcessInfos;
 using WindaubeFirewall.Profiles;
 using WindaubeFirewall.Settings;
+
+using NetworkActionSettings = WindaubeFirewall.Settings.NetworkActionSettings;
 
 namespace WindaubeFirewall.Connection;
 
@@ -73,11 +76,30 @@ public class ConnectionWorker
         }
     }
 
+    private static bool GetEffectiveSetting(bool? profileValue, bool? globalValue, bool defaultValue = false)
+    {
+        return profileValue ?? globalValue ?? defaultValue;
+    }
+
+    private static IEnumerable<string> GetEffectiveRules(NetworkActionSettings? profileAction, NetworkActionSettings globalAction, bool incoming)
+    {
+        var rules = incoming ?
+            (profileAction?.IncomingRules ?? globalAction.IncomingRules) :
+            (profileAction?.OutgoingRules ?? globalAction.OutgoingRules);
+        return rules ?? [];
+    }
+
+    private static bool GetEffectiveEnabledState(BlocklistEnabledState? state, bool defaultValue = false)
+    {
+        return state?.IsEnabled ?? defaultValue;
+    }
+
     private static void ProcessVerdict(ConnectionModel connection)
     {
         // Load profile and app settings
         var profile = App.SettingsProfiles.First(p => p.Id == connection.ProfileID);
         var settings = App.SettingsApp;
+        var globalNetworkAction = settings.NetworkAction;
 
         // Exception for incoming Loopback
         if (connection.Direction == 1 && connection.RemoteScope == 0)
@@ -118,7 +140,8 @@ public class ConnectionWorker
                 }
                 else
                 {
-                    if (profile.NetworkAction.BlockBypassDNS == true)
+                    var blockBypassDns = GetEffectiveSetting(profile.NetworkAction?.BlockBypassDNS, globalNetworkAction.BlockBypassDNS);
+                    if (blockBypassDns)
                     {
                         // Check if it's going to one of the network adapters' DNS servers
                         bool isNetworkAdapterDNS = App.NetworkAdapters.Any(adapter =>
@@ -159,7 +182,8 @@ public class ConnectionWorker
         }
 
         // Check all force block conditions (highest priority)
-        if ((profile.NetworkAction.ForceBlockIncoming == true || settings.NetworkAction.ForceBlockIncoming == true) && connection.Direction == 1)
+        var forceBlockIncoming = GetEffectiveSetting(profile.NetworkAction?.ForceBlockIncoming, globalNetworkAction.ForceBlockIncoming);
+        if (forceBlockIncoming && connection.Direction == 1)
         {
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "ForceBlockIncoming";
@@ -170,8 +194,8 @@ public class ConnectionWorker
             return;
         }
 
-        if ((profile.NetworkAction.ForceBlockLocalhost == true || settings.NetworkAction.ForceBlockLocalhost == true) &&
-            (connection.LocalScope == 0 || connection.RemoteScope == 0))
+        var forceBlockLocalhost = GetEffectiveSetting(profile.NetworkAction?.ForceBlockLocalhost, globalNetworkAction.ForceBlockLocalhost);
+        if (forceBlockLocalhost && (connection.LocalScope == 0 || connection.RemoteScope == 0))
         {
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "ForceBlockLocalhost";
@@ -182,8 +206,8 @@ public class ConnectionWorker
             return;
         }
 
-        if ((profile.NetworkAction.ForceBlockLAN == true || settings.NetworkAction.ForceBlockLAN == true) &&
-            (connection.LocalScope is 1 or 2 || connection.RemoteScope is 1 or 2))
+        var forceBlockLAN = GetEffectiveSetting(profile.NetworkAction?.ForceBlockLAN, globalNetworkAction.ForceBlockLAN);
+        if (forceBlockLAN && (connection.LocalScope is 1 or 2 || connection.RemoteScope is 1 or 2))
         {
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "ForceBlockLAN";
@@ -194,8 +218,8 @@ public class ConnectionWorker
             return;
         }
 
-        if ((profile.NetworkAction.ForceBlockInternet == true || settings.NetworkAction.ForceBlockInternet == true) &&
-            (connection.LocalScope == 3 || connection.RemoteScope == 3))
+        var forceBlockInternet = GetEffectiveSetting(profile.NetworkAction?.ForceBlockInternet, globalNetworkAction.ForceBlockInternet);
+        if (forceBlockInternet && (connection.LocalScope == 3 || connection.RemoteScope == 3))
         {
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "ForceBlockInternet";
@@ -207,7 +231,7 @@ public class ConnectionWorker
         }
 
         // Check BypassDNS
-        var BypassDnsEnabled = profile.NetworkAction.BlockBypassDNS;
+        var BypassDnsEnabled = GetEffectiveSetting(profile.NetworkAction?.BlockBypassDNS, globalNetworkAction.BlockBypassDNS);
         if (BypassDnsEnabled)
         {
             // Check for DNS bypass because IP
@@ -235,9 +259,10 @@ public class ConnectionWorker
         }
 
         // Get enabled blocklists from both online and offline sources
-        var profileBlocklists = profile.Blocklists.OnlineBlocklists
-            .Where(b => b.IsEnabled)
-            .Select(b => b.Name);
+        var profileBlocklists = profile.Blocklists?.OnlineBlocklists
+            ?.Where(b => GetEffectiveEnabledState(b))
+            ?.Select(b => b.Name) ?? Enumerable.Empty<string>();
+
         var globalBlocklists = settings.Blocklists.OfflineBlocklists
             .Where(b => b.IsEnabled)
             .Select(b => b.Name);
@@ -265,9 +290,7 @@ public class ConnectionWorker
         }
 
         // Check for rules
-        var rules = connection.Direction == 1
-            ? profile.NetworkAction.IncomingRules
-            : profile.NetworkAction.OutgoingRules;
+        var rules = GetEffectiveRules(profile.NetworkAction, globalNetworkAction, connection.Direction == 1);
 
         foreach (var ruleString in rules)
         {
@@ -307,9 +330,12 @@ public class ConnectionWorker
             }
         }
 
+        // Get default network action
+        var defaultNetworkAction = profile.NetworkAction?.DefaultNetworkAction ?? globalNetworkAction.DefaultNetworkAction ?? 1;
+
         // Check for default network action
         // 0 = block, 1 = allow, 2 = prompt
-        if (profile.NetworkAction.DefaultNetworkAction == 0)
+        if (defaultNetworkAction == 0)
         {
             connection.VerdictString = "BLOCK";
             connection.VerdictReason = "DefaultBlock";
@@ -319,7 +345,7 @@ public class ConnectionWorker
             _connections.TryAdd(connection.ConnectionID, connection);
             return;
         }
-        else if (profile.NetworkAction.DefaultNetworkAction == 1)
+        else if (defaultNetworkAction == 1)
         {
             connection.VerdictString = "ALLOW";
             connection.VerdictReason = "DefaultAllow";

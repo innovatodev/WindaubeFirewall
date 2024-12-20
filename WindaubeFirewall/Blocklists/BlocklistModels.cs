@@ -1,11 +1,14 @@
+using System.IO;
+
 namespace WindaubeFirewall.Blocklists;
 
 public class OfflineBlocklist
 {
     required public string Name { get; set; }
-    required public string FilePath { get; set; }
     required public BlockListType Type { get; set; }
     public bool IsEnabled { get; set; } = false;
+    public string FilePath => Path.Combine(Constants.DirectoryBlocklistsOffline, $"{Path.GetFileNameWithoutExtension(Name)}.txt");
+
 }
 
 public class OnlineBlocklist
@@ -16,18 +19,6 @@ public class OnlineBlocklist
     required public BlockListType Type { get; set; }
     public bool IsAutoUpdate { get; set; } = true;
     public DateTime LastUpdate { get; set; } = DateTime.MinValue;
-    public bool IsEnabled { get; set; } = false;
-}
-
-public class BlocklistEnabledState
-{
-    required public string Name { get; set; }
-    public bool IsEnabled { get; set; } = false;
-}
-
-public class OfflineBlocklistEnabledState
-{
-    required public string Name { get; set; }
     public bool IsEnabled { get; set; } = false;
 }
 

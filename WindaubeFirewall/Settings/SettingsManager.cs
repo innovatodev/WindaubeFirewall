@@ -1,5 +1,5 @@
 using System.IO;
-
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -13,14 +13,29 @@ public class SettingsManager
     private const int MaxRetries = 3;
     private const int RetryDelayMs = 100;
 
-    private static readonly ISerializer Serializer = new SerializerBuilder()
+    private static readonly ISerializer _serializer = new SerializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+        // Disable YAML anchors
         .DisableAliases()
         .Build();
 
-    private static readonly IDeserializer Deserializer = new DeserializerBuilder()
+    private static readonly IDeserializer _deserializer = new DeserializerBuilder()
         .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .Build();
+
+    private static readonly ISerializer _appSerializer = new SerializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve)
+        // Disable YAML anchors
+        .DisableAliases()
+        .Build();
+
+    private static readonly ISerializer _profileSerializer = new SerializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve) // Already preserving nulls
+        // Disable YAML anchors
+        .DisableAliases()
         .Build();
 
     public static SettingsApplication LoadSettingsApplication()
@@ -42,7 +57,7 @@ public class SettingsManager
                 return defaultSettings;
             }
 
-            var settings = Deserializer.Deserialize<SettingsApplication>(yaml);
+            var settings = _deserializer.Deserialize<SettingsApplication>(yaml);
             return settings ?? new SettingsApplication();
         }
         catch (Exception ex)
@@ -54,15 +69,13 @@ public class SettingsManager
         }
     }
 
+    public static SettingsApplication CurrentSettingsApplication { get; private set; } = LoadSettingsApplication();
+
     public static void SaveSettingsApplication(SettingsApplication settings)
     {
         lock (_settingsLock)
         {
-            RetryFileOperation(() =>
-            {
-                var yaml = Serializer.Serialize(settings);
-                File.WriteAllText(AppSettingsPath, yaml);
-            });
+            SaveYamlFile(AppSettingsPath, settings, _appSerializer);
         }
     }
 
@@ -70,20 +83,7 @@ public class SettingsManager
     {
         lock (_settingsLock)
         {
-            List<SettingsProfiles> loadedProfiles;
-
-            if (!File.Exists(ProfilesSettingsPath))
-            {
-                loadedProfiles = new List<SettingsProfiles>();
-                SaveSettingsProfiles(loadedProfiles);
-            }
-            else
-            {
-                var yaml = File.ReadAllText(ProfilesSettingsPath);
-                loadedProfiles = Deserializer.Deserialize<List<SettingsProfiles>>(yaml) ?? new List<SettingsProfiles>();
-            }
-
-            return loadedProfiles;
+            return LoadYamlFile<List<SettingsProfiles>>(ProfilesSettingsPath);
         }
     }
 
@@ -91,17 +91,7 @@ public class SettingsManager
     {
         lock (_settingsLock)
         {
-            RetryFileOperation(() =>
-            {
-                using var fileStream = new FileStream(
-                    ProfilesSettingsPath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.Read);
-                using var writer = new StreamWriter(fileStream);
-                var yaml = Serializer.Serialize(profiles);
-                writer.Write(yaml);
-            });
+            SaveYamlFile(ProfilesSettingsPath, profiles, _profileSerializer);
         }
     }
 
@@ -127,5 +117,41 @@ public class SettingsManager
         }
 
         throw new IOException($"Failed to access file after {MaxRetries} attempts", lastException);
+    }
+
+    private static void SaveYamlFile<T>(string path, T data)
+    {
+        RetryFileOperation(() =>
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var yaml = _serializer.Serialize(data);
+            File.WriteAllText(path, yaml);
+        });
+    }
+
+    private static void SaveYamlFile<T>(string path, T data, ISerializer serializer)
+    {
+        RetryFileOperation(() =>
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var yaml = serializer.Serialize(data);
+            File.WriteAllText(path, yaml);
+        });
+    }
+
+    private static T LoadYamlFile<T>(string path) where T : new()
+    {
+        if (!File.Exists(path))
+            return new T();
+
+        try
+        {
+            var yaml = File.ReadAllText(path);
+            return _deserializer.Deserialize<T>(yaml);
+        }
+        catch
+        {
+            return new T();
+        }
     }
 }
