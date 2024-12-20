@@ -131,17 +131,24 @@ public class BlocklistManager
         foreach (var onlineList in App.SettingsApp.Blocklists.OnlineBlocklists)
         {
             var filePath = Path.Combine(Constants.DirectoryBlocklistsOnline, $"{onlineList.Name}.txt");
-            if (!File.Exists(filePath))
+
+            // Check if file exists and needs updating based on LastUpdate
+            bool needsUpdate = !File.Exists(filePath) ||
+                             (onlineList.IsAutoUpdate && ShouldUpdate(onlineList));
+
+            if (needsUpdate)
             {
-                Logger.Log($"Online blocklist file not found: {filePath}, attempting to update...");
+                Logger.Log($"Online blocklist {onlineList.Name} needs update, attempting to update...");
                 try
                 {
                     UpdateOnlineBlocklist(onlineList);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Failed to update missing blocklist {onlineList.Name}: {ex.Message}");
-                    continue;
+                    Logger.Log($"Failed to update blocklist {onlineList.Name}: {ex.Message}");
+                    // If file doesn't exist and update failed, skip this blocklist
+                    if (!File.Exists(filePath))
+                        continue;
                 }
             }
 
@@ -254,7 +261,7 @@ public class BlocklistManager
             //Logger.Log($"Blocklist {name} preview entries:");
             foreach (var entry in previewEntries)
             {
-                Logger.Log($"  - {entry}");
+                //Logger.Log($"  - {entry}");
             }
 
             return blocklist;

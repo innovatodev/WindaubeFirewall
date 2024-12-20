@@ -1,4 +1,5 @@
 using System.IO;
+using YamlDotNet.Serialization;
 
 namespace WindaubeFirewall.Blocklists;
 
@@ -10,8 +11,21 @@ public class OfflineBlocklist
     required public string Name { get; set; }
     required public BlockListType Type { get; set; }
     public bool IsEnabled { get; set; } = false;
-    public string FilePath => Path.Combine(Constants.DirectoryBlocklistsOffline, $"{Path.GetFileNameWithoutExtension(Name)}.txt");
 
+    [YamlIgnore]
+    public string FilePath => Path.Combine(Constants.DirectoryBlocklistsOffline, $"{Name}.txt");
+
+    // Explicitly ignore this during serialization and deserialization
+    [YamlIgnore]
+    private string? _filePath;
+
+    // Explicitly ignore this during serialization and deserialization
+    [YamlIgnore]
+    public string? StoredFilePath
+    {
+        get => _filePath;
+        set => _filePath = value;
+    }
 }
 
 /// <summary>
