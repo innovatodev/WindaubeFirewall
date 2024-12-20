@@ -1,10 +1,12 @@
-
 using System.Runtime.InteropServices;
 
 namespace WindaubeFirewall.Driver;
 
 public static class DriverCommands
 {
+    /// <summary>
+    /// Available driver commands
+    /// </summary>
     public enum Command : byte
     {
         Shutdown = 0,
@@ -18,6 +20,9 @@ public static class DriverCommands
         CleanEndedConnections = 8
     }
 
+    /// <summary>
+    /// Connection verdict types
+    /// </summary>
     public enum Verdict : byte
     {
         Undecided = 0,
@@ -33,6 +38,7 @@ public static class DriverCommands
         Failed = 10
     }
 
+    // Command structures for driver communication
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct VerdictStruct
     {
@@ -71,6 +77,11 @@ public static class DriverCommands
 
     private static readonly byte[] EmptyCommand = new byte[1];
 
+    /// <summary>
+    /// Converts a structure to a byte array for driver communication.
+    /// </summary>
+    /// <param name="structure">Structure to convert</param>
+    /// <returns>Byte array representation of the structure</returns>
     public static byte[] StructureToByteArray(object structure)
     {
         int size = Marshal.SizeOf(structure);

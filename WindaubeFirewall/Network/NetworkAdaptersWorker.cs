@@ -8,10 +8,14 @@ public class NetworkAdaptersWorker
     public const int MAX_CACHE_SIZE = 1024;
     public static DateTime LastUpdate { get; set; } = DateTime.MinValue;
 
+    /// <summary>
+    /// Continuously monitors and updates network adapter information at regular intervals
+    /// </summary>
     public static void DoWork()
     {
         while (!IsCancellationRequested)
         {
+            // Update network adapters every 60 seconds
             if ((DateTime.Now - LastUpdate).TotalSeconds >= 60)
             {
                 App.NetworkAdapters = UpdateNetworkAdapters();
@@ -21,6 +25,10 @@ public class NetworkAdaptersWorker
         }
     }
 
+    /// <summary>
+    /// Updates the list of network adapters and logs any changes
+    /// </summary>
+    /// <returns>Updated list of network adapters</returns>
     public static List<NetworkAdapter> UpdateNetworkAdapters()
     {
         var adapters = NetworkAdapters.GetNetworkAdapters();
@@ -68,6 +76,9 @@ public class NetworkAdaptersWorker
         return adapters;
     }
 
+    /// <summary>
+    /// Initializes and starts the network adapters monitoring thread
+    /// </summary>
     public static void Start()
     {
         _workerThread = new Thread(DoWork)
@@ -78,6 +89,9 @@ public class NetworkAdaptersWorker
         _workerThread.Start();
     }
 
+    /// <summary>
+    /// Stops the network adapters monitoring thread
+    /// </summary>
     public static void Stop()
     {
         _workerThread?.Join(1000);

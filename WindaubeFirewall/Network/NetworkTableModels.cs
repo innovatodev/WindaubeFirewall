@@ -2,6 +2,9 @@ using System.Net;
 
 namespace WindaubeFirewall.Network;
 
+/// <summary>
+/// Static container for network table data collections
+/// </summary>
 public class NetworkTable
 {
     public static List<NetworkTableTCP4>? NetworkTableTcp4Active { get; set; }
@@ -15,6 +18,9 @@ public class NetworkTable
     public static List<NetworkTableUDP6>? NetworkTableUdp6Cache { get; set; }
 }
 
+/// <summary>
+/// Represents an IPv4 TCP connection entry in the network table
+/// </summary>
 public class NetworkTableTCP4
 {
     public string Protocol { get; } = "TCP4";
@@ -26,6 +32,9 @@ public class NetworkTableTCP4
     required public uint OwningPid { get; set; }
 }
 
+/// <summary>
+/// Represents an IPv6 TCP connection entry in the network table
+/// </summary>
 public class NetworkTableTCP6
 {
     public string Protocol { get; } = "TCP6";
@@ -37,6 +46,9 @@ public class NetworkTableTCP6
     required public uint OwningPid { get; set; }
 }
 
+/// <summary>
+/// Represents an IPv4 UDP endpoint entry in the network table
+/// </summary>
 public class NetworkTableUDP4
 {
     public string Protocol { get; } = "UDP4";
@@ -45,6 +57,9 @@ public class NetworkTableUDP4
     required public uint OwningPid { get; set; }
 }
 
+/// <summary>
+/// Represents an IPv6 UDP endpoint entry in the network table
+/// </summary>
 public class NetworkTableUDP6
 {
     public string Protocol { get; } = "UDP6";

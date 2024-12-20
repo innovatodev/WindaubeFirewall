@@ -18,6 +18,9 @@ public class NetworkTableWorker
     public static List<NetworkTableUDP4> NetworkTableUdp4Cache { get; set; } = [];
     public static List<NetworkTableUDP6> NetworkTableUdp6Cache { get; set; } = [];
 
+    /// <summary>
+    /// Continuously monitors and updates network table data at regular intervals
+    /// </summary>
     public static void DoWork()
     {
         while (!IsCancellationRequested)
@@ -31,6 +34,9 @@ public class NetworkTableWorker
         }
     }
 
+    /// <summary>
+    /// Initializes and starts the network table worker thread
+    /// </summary>
     public static void Start()
     {
         _workerThread = new Thread(DoWork)
@@ -42,6 +48,9 @@ public class NetworkTableWorker
         _workerThread.Start();
     }
 
+    /// <summary>
+    /// Stops the network table worker thread
+    /// </summary>
     public static void Stop()
     {
         _workerThread?.Join(1000);

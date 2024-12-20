@@ -14,6 +14,11 @@ public partial class IOCTL
     public static readonly uint CODE_VERSION = CTL_CODE(SIOCTL_TYPE, 0x800, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA);
     public static readonly uint CODE_SHUTDOWN = CTL_CODE(SIOCTL_TYPE, 0x801, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA);
 
+    /// <summary>
+    /// Retrieves the version information from the driver.
+    /// </summary>
+    /// <param name="safeFileHandle">Handle to the driver device</param>
+    /// <returns>Version string in format "x.x.x.x"</returns>
     public static string GetVersion(SafeFileHandle safeFileHandle)
     {
         if (safeFileHandle == null || safeFileHandle.IsInvalid)
@@ -29,6 +34,10 @@ public partial class IOCTL
         return $"{inBuffer[0]}.{inBuffer[1]}.{inBuffer[2]}.{inBuffer[3]}";
     }
 
+    /// <summary>
+    /// Sends shutdown command to the driver.
+    /// </summary>
+    /// <param name="safeFileHandle">Handle to the driver device</param>
     public static void Shutdown(SafeFileHandle safeFileHandle)
     {
         if (safeFileHandle == null || safeFileHandle.IsInvalid)
@@ -38,11 +47,19 @@ public partial class IOCTL
         DeviceIoControlSync(safeFileHandle, CODE_SHUTDOWN, null, null);
     }
 
+    /// <summary>
+    /// Creates an IOCTL control code.
+    /// </summary>
+    /// <returns>The computed control code</returns>
     public static uint CTL_CODE(uint DeviceType, uint Function, uint Method, uint Access)
     {
         return (DeviceType << 16) | (Access << 14) | (Function << 2) | Method;
     }
 
+    /// <summary>
+    /// Performs a synchronous IO control operation with the driver.
+    /// </summary>
+    /// <returns>Number of bytes returned from the operation</returns>
     public static uint DeviceIoControlSync(SafeFileHandle hDevice, uint ioControlCode, byte[]? inBuffer, byte[]? outBuffer)
     {
         IntPtr inBufferPtr = IntPtr.Zero;

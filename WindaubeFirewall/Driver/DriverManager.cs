@@ -7,6 +7,10 @@ public class DriverManager
 {
     private static readonly string _kextPath = Constants.KextPath;
     private static readonly string _kextName = Constants.KextName;
+
+    /// <summary>
+    /// Performs cleanup operations for the driver, including stopping and uninstalling if necessary.
+    /// </summary>
     public static void CleanDriver()
     {
         if (!IsDriverInstalled() && !IsDriverRunning()) { return; }
@@ -24,6 +28,9 @@ public class DriverManager
         UninstallDriver();
     }
 
+    /// <summary>
+    /// Installs the driver if it's not already installed. Throws if driver file is not found.
+    /// </summary>
     public static void InstallDriver()
     {
         if (IsDriverInstalled()) { return; }
@@ -37,6 +44,9 @@ public class DriverManager
         Logger.Log($"{Constants.KextName} driver installed successfully.");
     }
 
+    /// <summary>
+    /// Uninstalls the driver if it's installed, stopping it first if necessary.
+    /// </summary>
     public static void UninstallDriver()
     {
         if (!IsDriverInstalled()) { return; }
@@ -49,6 +59,9 @@ public class DriverManager
         Logger.Log($"{Constants.KextName} driver uninstalled successfully.");
     }
 
+    /// <summary>
+    /// Starts the driver service. Throws if driver is not installed.
+    /// </summary>
     public static void StartDriver()
     {
         if (!IsDriverInstalled())
@@ -65,6 +78,9 @@ public class DriverManager
         }
     }
 
+    /// <summary>
+    /// Stops the driver service if it's running.
+    /// </summary>
     public static void StopDriver()
     {
         if (!IsDriverRunning())
@@ -81,6 +97,10 @@ public class DriverManager
         }
     }
 
+    /// <summary>
+    /// Checks if the driver is currently installed in the system.
+    /// </summary>
+    /// <returns>True if the driver is installed, false otherwise</returns>
     public static bool IsDriverInstalled()
     {
         var services = ServiceController.GetDevices();
@@ -92,6 +112,10 @@ public class DriverManager
         return false;
     }
 
+    /// <summary>
+    /// Checks if the driver service is currently running.
+    /// </summary>
+    /// <returns>True if the driver is running, false otherwise</returns>
     public static bool IsDriverRunning()
     {
         var services = ServiceController.GetDevices();
@@ -103,6 +127,10 @@ public class DriverManager
         return false;
     }
 
+    /// <summary>
+    /// Gets the current status of the driver service.
+    /// </summary>
+    /// <returns>The current ServiceControllerStatus of the driver</returns>
     public static ServiceControllerStatus GetStatus()
     {
         using ServiceController serviceController = new(Constants.KextName);

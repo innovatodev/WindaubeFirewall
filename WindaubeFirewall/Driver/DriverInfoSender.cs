@@ -4,6 +4,10 @@ namespace WindaubeFirewall.Driver;
 
 public class DriverInfoSender
 {
+    /// <summary>
+    /// Validates if the writer is available and ready for writing.
+    /// </summary>
+    /// <returns>True if writer is valid and ready, false otherwise</returns>
     private static bool ValidateWriter()
     {
         if (DriverWorker.IsCancellationRequested)
@@ -33,6 +37,10 @@ public class DriverInfoSender
         }
     }
 
+    /// <summary>
+    /// Sends a simple command byte to the driver.
+    /// </summary>
+    /// <param name="command">Command byte to send</param>
     private static void SendCommand(byte command)
     {
         if (DriverWorker.IsCancellationRequested)
@@ -50,6 +58,11 @@ public class DriverInfoSender
         }
     }
 
+    /// <summary>
+    /// Sends a structured command to the driver.
+    /// </summary>
+    /// <typeparam name="T">Structure type that represents the command</typeparam>
+    /// <param name="structure">Command structure to send</param>
     private static void SendCommand<T>(T structure) where T : struct
     {
         if (DriverWorker.IsCancellationRequested)
@@ -73,8 +86,9 @@ public class DriverInfoSender
         }
     }
 
-    public static void SendShutdown() => SendCommand((byte)Commands.Command.Shutdown);
-
+    /// <summary>
+    /// Sends a verdict decision for a specific connection.
+    /// </summary>
     public static void CommandSendVerdict(ulong id, Commands.Verdict decision)
     {
         //Logger.Log($"SendVerdict: ID={id}, Decision={decision}");
@@ -86,6 +100,9 @@ public class DriverInfoSender
         });
     }
 
+    /// <summary>
+    /// Updates IPv4 connection rules in the driver.
+    /// </summary>
     public static void SendUpdateV4(byte protocol, byte[] localAddr, ushort localPort, byte[] remoteAddr, ushort remotePort, Commands.Verdict decision)
     {
         Logger.Log($"SendUpdateV4: Protocol={protocol}, LocalAddr={localAddr}, LocalPort={localAddr}, RemoteAddr={remoteAddr}, RemotePort={remotePort}, Decision={decision}");
@@ -101,6 +118,9 @@ public class DriverInfoSender
         });
     }
 
+    /// <summary>
+    /// Updates IPv6 connection rules in the driver.
+    /// </summary>
     public static void SendUpdateV6(byte protocol, byte[] localAddr, ushort localPort, byte[] remoteAddr, ushort remotePort, Commands.Verdict decision)
     {
         Logger.Log($"SendUpdateV6: Protocol={protocol}, LocalAddr={localAddr}, LocalPort={localPort}, RemoteAddr={remoteAddr}, RemotePort={remotePort}, Decision={decision}");
@@ -116,6 +136,8 @@ public class DriverInfoSender
         });
     }
 
+    // Helper command methods
+    public static void SendShutdown() => SendCommand((byte)Commands.Command.Shutdown);
     public static void CommandClearCache() => SendCommand((byte)Commands.Command.ClearCache);
     public static void CommandGetLogs() => SendCommand((byte)Commands.Command.GetLogs);
     public static void CommandGetBandwidthStats() => SendCommand((byte)Commands.Command.BandwidthStats);

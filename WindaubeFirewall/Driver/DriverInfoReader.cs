@@ -6,14 +6,19 @@ namespace WindaubeFirewall.Driver;
 
 public class DriverInfoReader
 {
-    private const byte LogLine = 0;
-    private const byte ConnectionV4 = 1;
-    private const byte ConnectionV6 = 2;
-    private const byte ConnectionEndV4 = 3;
-    private const byte ConnectionEndV6 = 4;
-    private const byte BandwidthStatsV4 = 5;
-    private const byte BandwidthStatsV6 = 6;
+    // Information type constants
+    private const byte LogLine = 0;            // Driver log message
+    private const byte ConnectionV4 = 1;       // IPv4 connection info
+    private const byte ConnectionV6 = 2;       // IPv6 connection info
+    private const byte ConnectionEndV4 = 3;    // IPv4 connection termination
+    private const byte ConnectionEndV6 = 4;    // IPv6 connection termination
+    private const byte BandwidthStatsV4 = 5;   // IPv4 bandwidth statistics
+    private const byte BandwidthStatsV6 = 6;   // IPv6 bandwidth statistics
 
+    /// <summary>
+    /// Receives and parses a single information packet from the driver.
+    /// </summary>
+    /// <returns>Parsed driver information or null if no data available</returns>
     public static DriverInfo? ReceiveInfo()
     {
         var reader = DriverWorker.KextBinaryReader;
@@ -79,6 +84,10 @@ public class DriverInfoReader
         BandwidthStatsV6 = 6
     }
 
+    /// <summary>
+    /// Receives and parses all available information packets from the driver.
+    /// </summary>
+    /// <returns>List of parsed driver information</returns>
     public static List<DriverInfo> ReceiveInfoAll()
     {
         var infos = new List<DriverInfo>();

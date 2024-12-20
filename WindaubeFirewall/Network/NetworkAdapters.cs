@@ -4,6 +4,9 @@ using Windows.Networking.Connectivity;
 
 namespace WindaubeFirewall.Network;
 
+/// <summary>
+/// Represents a network adapter with its configuration and status
+/// </summary>
 public class NetworkAdapter
 {
     public string Name { get; set; } = string.Empty;
@@ -20,6 +23,9 @@ public class NetworkAdapter
     public List<string> IPv6DnsServers { get; set; } = [];
     public bool IsDefault { get; set; }
 
+    /// <summary>
+    /// Prints detailed information about the network adapter to the log
+    /// </summary>
     public void Print()
     {
         Logger.Log($"NetworkAdapter: {Name} ({MacAddress}) {Status}");
@@ -38,8 +44,14 @@ public class NetworkAdapter
     }
 }
 
+/// <summary>
+/// Provides methods for managing and monitoring network adapters
+/// </summary>
 public class NetworkAdapters
 {
+    /// <summary>
+    /// Prints information about all available network adapters
+    /// </summary>
     public static void PrintAll()
     {
         var adapters = GetNetworkAdapters();
@@ -50,6 +62,10 @@ public class NetworkAdapters
         }
     }
 
+    /// <summary>
+    /// Gets the ID of the default network adapter used for internet connectivity
+    /// </summary>
+    /// <returns>The ID of the default adapter, or empty string if not found</returns>
     public static string GetDefaultAdapterID()
     {
         ConnectionProfile? connectionProfile = NetworkInformation.GetInternetConnectionProfile();
@@ -57,6 +73,10 @@ public class NetworkAdapters
         return "{" + connectionProfile.NetworkAdapter.NetworkAdapterId.ToString().ToUpper() + "}";
     }
 
+    /// <summary>
+    /// Retrieves a list of all active network adapters with their configurations
+    /// </summary>
+    /// <returns>List of configured network adapters</returns>
     public static List<NetworkAdapter> GetNetworkAdapters()
     {
         List<NetworkAdapter> networkAdapters = [];
@@ -124,11 +144,17 @@ public class NetworkAdapters
         return networkAdapters;
     }
 
+    /// <summary>
+    /// Identifies network adapters that have been added since the last check
+    /// </summary>
     public static List<NetworkAdapter> GetAddedAdapters(List<NetworkAdapter> current, List<NetworkAdapter> previous)
     {
         return current.Where(c => !previous.Any(p => p.Id == c.Id)).ToList();
     }
 
+    /// <summary>
+    /// Identifies network adapters that have been removed since the last check
+    /// </summary>
     public static List<NetworkAdapter> GetRemovedAdapters(List<NetworkAdapter> current, List<NetworkAdapter> previous)
     {
         return previous.Where(p => !current.Any(c => c.Id == p.Id)).ToList();

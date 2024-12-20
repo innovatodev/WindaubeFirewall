@@ -21,6 +21,10 @@ public class DriverWorker
     private static readonly object WriterLock = new();
     public static object GetWriterLock() => WriterLock;
 
+    /// <summary>
+    /// Main worker method that continuously processes information from the driver.
+    /// Handles various types of connections and events including IPv4, IPv6, connection ends, and bandwidth statistics.
+    /// </summary>
     public static void DoWork()
     {
         while (!IsCancellationRequested)
@@ -118,6 +122,9 @@ public class DriverWorker
         }
     }
 
+    /// <summary>
+    /// Background worker method that periodically requests bandwidth statistics from the driver.
+    /// </summary>
     private static void BandwidthStatsWork()
     {
         while (!IsCancellationRequested)
@@ -130,6 +137,11 @@ public class DriverWorker
         }
     }
 
+    /// <summary>
+    /// Sends a verdict decision for a specific connection to the driver.
+    /// </summary>
+    /// <param name="verdictID">The unique identifier of the connection</param>
+    /// <param name="verdict">The verdict decision to be applied</param>
     public static void SendVerdict(ulong verdictID, DriverCommands.Verdict verdict)
     {
         if (!IsCancellationRequested)
@@ -141,6 +153,9 @@ public class DriverWorker
         }
     }
 
+    /// <summary>
+    /// Initializes and starts the driver worker threads and establishes necessary driver connections.
+    /// </summary>
     public static void Start()
     {
         lock (WriterLock)
@@ -177,6 +192,9 @@ public class DriverWorker
         }
     }
 
+    /// <summary>
+    /// Stops the driver worker threads and cleans up all driver-related resources.
+    /// </summary>
     public static void Stop()
     {
         lock (WriterLock)

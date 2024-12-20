@@ -4,6 +4,10 @@ namespace WindaubeFirewall.Network;
 
 public partial class NetworkTableBase
 {
+    /// <summary>
+    /// Retrieves all IPv4 TCP connections with their associated process IDs
+    /// </summary>
+    /// <returns>List of TCP IPv4 connections with process information</returns>
     public static List<MIB_TCP4ROW_OWNER_PID> GetExtendedTcp4TableEntries()
     {
         List<MIB_TCP4ROW_OWNER_PID> tcpRows = [];
@@ -42,6 +46,10 @@ public partial class NetworkTableBase
         return tcpRows;
     }
 
+    /// <summary>
+    /// Retrieves all IPv6 TCP connections with their associated process IDs
+    /// </summary>
+    /// <returns>List of TCP IPv6 connections with process information</returns>
     public static List<MIB_TCP6ROW_OWNER_PID> GetExtendedTcp6TableEntries()
     {
         List<MIB_TCP6ROW_OWNER_PID> tcpRows = [];
@@ -80,6 +88,10 @@ public partial class NetworkTableBase
         return tcpRows;
     }
 
+    /// <summary>
+    /// Retrieves all IPv4 UDP endpoints with their associated process IDs
+    /// </summary>
+    /// <returns>List of UDP IPv4 endpoints with process information</returns>
     public static List<MIB_UDP4ROW_OWNER_PID> GetExtendedUdp4TableEntries()
     {
         List<MIB_UDP4ROW_OWNER_PID> udpRows = [];
@@ -118,6 +130,10 @@ public partial class NetworkTableBase
         return udpRows;
     }
 
+    /// <summary>
+    /// Retrieves all IPv6 UDP endpoints with their associated process IDs
+    /// </summary>
+    /// <returns>List of UDP IPv6 endpoints with process information</returns>
     public static List<MIB_UDP6ROW_OWNER_PID> GetExtendedUdp6TableEntries()
     {
         List<MIB_UDP6ROW_OWNER_PID> udpRows = [];
